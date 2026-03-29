@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Timeline — Real TAAFT Automation Engine</title>
+    <meta name="description" content="Real automation dashboard for TAAFT image generation with Playwright backend">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- LOADING SCREEN -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader-container">
+            <div class="cyber-loader">
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <span class="loader-text">AUTO TIMELINE</span>
+            </div>
+            <p class="loader-subtitle">Connecting to Engine...</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app-container" id="appContainer">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <span class="logo-glow"><i data-lucide="zap"></i></span>
+                    </div>
+                    <div class="logo-text">
+                        <h1>AUTO</h1>
+                        <h2>TIMELINE</h2>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <span class="nav-label">MAIN</span>
+                    <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+                        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+                        <span class="nav-text">Dashboard</span>
+                        <span class="nav-glow"></span>
+                    </button>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-label">CHAPTERS</span>
+                    <div class="chapters-list" id="chaptersList"></div>
+                    <button class="add-chapter-btn" onclick="addNewChapter()">
+                        <span class="add-icon">+</span>
+                        <span>Add Chapter</span>
+                    </button>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-label">SYSTEM</span>
+                    <button class="nav-item" data-page="cookies" onclick="showPage('cookies')">
+                        <span class="nav-icon"><i data-lucide="key-round"></i></span>
+                        <span class="nav-text">Login Cookies</span>
+                    </button>
+                    <button class="nav-item" data-page="tracking" onclick="showPage('tracking')">
+                        <span class="nav-icon"><i data-lucide="activity"></i></span>
+                        <span class="nav-text">Live Tracking</span>
+                    </button>
+                    <button class="nav-item" data-page="downloads" onclick="showPage('downloads')">
+                        <span class="nav-icon"><i data-lucide="folder-down"></i></span>
+                        <span class="nav-text">Downloads</span>
+                    </button>
+                    <button class="nav-item" data-page="settings" onclick="showPage('settings')">
+                        <span class="nav-icon"><i data-lucide="settings"></i></span>
+                        <span class="nav-text">Settings</span>
+                    </button>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="mini-stats">
+                    <div class="mini-stat">
+                        <span class="stat-value" id="totalChapters">0</span>
+                        <span class="stat-label">Chapters</span>
+                    </div>
+                    <div class="mini-stat">
+                        <span class="stat-value" id="totalPrompts">0</span>
+                        <span class="stat-label">Prompts</span>
+                    </div>
+                    <div class="mini-stat">
+                        <span class="stat-value" id="totalDone">0</span>
+                        <span class="stat-label">Done</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
+                    <h2 class="page-title" id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="top-bar-right">
+                    <div class="system-status">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span class="status-text" id="statusText">Connecting...</span>
+                    </div>
+                    <button class="neon-btn engine-btn engine-off" id="engineToggleBtn" onclick="toggleEngine()">
+                        <i data-lucide="power"></i>
+                        <span>START ENGINE</span>
+                    </button>
+                    <button class="neon-btn start-all-btn" id="startAllBtn" onclick="startAllChapters()">
+                        <i data-lucide="play"></i>
+                        <span>START ALL</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area" id="contentArea">
+
+                <!-- DASHBOARD -->
+                <div class="page active" id="page-dashboard">
+                    <!-- Engine Status Banner -->
+                    <div class="engine-banner glass-card" id="engineBanner">
+                        <div class="engine-banner-left">
+                            <div class="engine-icon-wrap">
+                                <i data-lucide="cpu" class="icon-lg"></i>
+                            </div>
+                            <div class="engine-info">
+                                <h3>Automation Engine</h3>
+                                <p>Real Playwright browser engine for TAAFT image generation</p>
+                            </div>
+                        </div>
+                        <div class="engine-banner-right">
+                            <button class="neon-btn engine-start-btn" onclick="toggleEngine()">
+                                <i data-lucide="power"></i>
+                                <span>Start Engine</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bento-grid">
+                        <div class="bento-card bento-large glass-card">
+                            <div class="card-header">
+                                <h3><i data-lucide="bar-chart-3"></i> Overall Progress</h3>
+                                <span class="badge badge-glow" id="overallPercent">0%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="cyber-progress">
+                                    <div class="progress-bar" id="overallProgress" style="width: 0%">
+                                        <div class="progress-glow"></div>
+                                    </div>
+                                </div>
+                                <div class="progress-stats">
+                                    <span><span class="dot dot-success"></span> Success: <strong
+                                            id="dashSuccess">0</strong></span>
+                                    <span><span class="dot dot-failed"></span> Failed: <strong
+                                            id="dashFailed">0</strong></span>
+                                    <span><span class="dot dot-pending"></span> Pending: <strong
+                                            id="dashPending">0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bento-card glass-card stat-card">
+                            <div class="stat-icon stat-icon-chapters"><i data-lucide="book-open" class="icon-stat"></i>
+                            </div>
+                            <div class="stat-info"><span class="stat-number" id="dashChapters">0</span><span
+                                    class="stat-title">Chapters</span></div>
+                        </div>
+                        <div class="bento-card glass-card stat-card">
+                            <div class="stat-icon stat-icon-prompts"><i data-lucide="file-text" class="icon-stat"></i>
+                            </div>
+                            <div class="stat-info"><span class="stat-number" id="dashTotalPrompts">0</span><span
+                                    class="stat-title">Total Prompts</span></div>
+                        </div>
+                        <div class="bento-card glass-card stat-card">
+                            <div class="stat-icon stat-icon-models"><i data-lucide="palette" class="icon-stat"></i>
+                            </div>
+                            <div class="stat-info"><span class="stat-number" id="dashModels">0</span><span
+                                    class="stat-title">Models Used</span></div>
+                        </div>
+                        <div class="bento-card glass-card stat-card">
+                            <div class="stat-icon stat-icon-cookies"><i data-lucide="key-round" class="icon-stat"></i>
+                            </div>
+                            <div class="stat-info"><span class="stat-number" id="dashCookies">0</span><span
+                                    class="stat-title">Active Cookies</span></div>
+                        </div>
+                    </div>
+                    <div class="section-header">
+                        <h3><i data-lucide="book-open"></i> Chapters Overview</h3>
+                        <button class="neon-btn-sm" onclick="addNewChapter()"><i data-lucide="plus" class="icon-sm"></i>
+                            Add Chapter</button>
+                    </div>
+                    <div class="chapters-grid" id="chaptersGrid"></div>
+                </div>
+
+                <!-- CHAPTER DETAIL -->
+                <div class="page" id="page-chapter">
+                    <div class="chapter-detail-container">
+                        <div class="chapter-header glass-card">
+                            <div class="chapter-header-left">
+                                <div class="chapter-number-badge" id="chapterBadge">CH 1</div>
+                                <div class="chapter-info">
+                                    <input type="text" class="chapter-name-input" id="chapterNameInput"
+                                        placeholder="Chapter Name..." value="Chapter 1">
+                                    <div class="chapter-meta">
+                                        <span id="chapterPromptCount">0/50 Prompts</span>
+                                        <span class="meta-divider">|</span>
+                                        <span id="chapterStatus">Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chapter-header-right">
+                                <button class="neon-btn-sm btn-start" onclick="startChapter()"><i data-lucide="play"
+                                        class="icon-sm"></i> Start</button>
+                                <button class="neon-btn-sm btn-pause" onclick="pauseChapter()"><i data-lucide="pause"
+                                        class="icon-sm"></i> Pause</button>
+                                <button class="neon-btn-sm btn-delete" onclick="deleteCurrentChapter()"><i
+                                        data-lucide="trash-2" class="icon-sm"></i> Delete</button>
+                            </div>
+                        </div>
+
+                        <!-- TIME TRACKING -->
+                        <div class="time-tracking-section glass-card">
+                            <h3><i data-lucide="timer"></i> Time Tracking</h3>
+                            <div id="chapterTimeInfo">
+                                <div class="time-info-grid">
+                                    <div class="time-card">
+                                        <span class="time-label">Elapsed</span>
+                                        <span class="time-value">--:--</span>
+                                    </div>
+                                    <div class="time-card">
+                                        <span class="time-label">ETA</span>
+                                        <span class="time-value">--:--</span>
+                                    </div>
+                                    <div class="time-card">
+                                        <span class="time-label">Avg/Prompt</span>
+                                        <span class="time-value">--</span>
+                                    </div>
+                                    <div class="time-card">
+                                        <span class="time-label">Progress</span>
+                                        <span class="time-value">0/0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="model-section glass-card">
+                            <h3><i data-lucide="palette"></i> Art Generation Model</h3>
+                            <div class="model-selector-grid" id="modelSelectorGrid"></div>
+                            <button class="add-model-btn" onclick="openAddModelModal()">
+                                <i data-lucide="plus" class="icon-sm"></i> <span>Add Custom Model</span>
+                            </button>
+                        </div>
+
+                        <div class="cookie-assign glass-card">
+                            <h3><i data-lucide="key-round"></i> Assigned Login Cookie</h3>
+                            <select class="cyber-select" id="chapterCookieSelect">
+                                <option value="">Select Cookie Account...</option>
+                            </select>
+                        </div>
+
+                        <div class="prompts-section glass-card">
+                            <div class="prompts-header">
+                                <h3><i data-lucide="file-text"></i> Prompts <span class="prompt-counter"
+                                        id="promptCounter">(0/50)</span></h3>
+                                <div class="prompts-actions">
+                                    <button class="neon-btn-sm" onclick="bulkImportPrompts()"><i data-lucide="upload"
+                                            class="icon-sm"></i> Import</button>
+                                    <button class="neon-btn-sm" onclick="exportPrompts()"><i data-lucide="download"
+                                            class="icon-sm"></i> Export</button>
+                                    <button class="neon-btn-sm btn-danger" onclick="clearAllPrompts()"><i
+                                            data-lucide="trash-2" class="icon-sm"></i> Clear</button>
+                                </div>
+                            </div>
+                            <div class="prompts-list" id="promptsList"></div>
+                            <div class="add-prompt-area" id="addPromptArea">
+                                <div class="prompt-input-group">
+                                    <span class="prompt-number" id="nextPromptNumber">#1</span>
+                                    <textarea class="prompt-input" id="newPromptInput"
+                                        placeholder="Enter your prompt here..." rows="2"></textarea>
+                                    <button class="add-prompt-btn" onclick="addPrompt()"><i
+                                            data-lucide="plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chapter-progress glass-card">
+                            <h3><i data-lucide="bar-chart-3"></i> Chapter Progress</h3>
+                            <div class="progress-details">
+                                <div class="cyber-progress">
+                                    <div class="progress-bar" id="chapterProgressBar" style="width: 0%">
+                                        <div class="progress-glow"></div>
+                                    </div>
+                                </div>
+                                <div class="progress-stats-row">
+                                    <div class="progress-stat"><span class="dot dot-success"></span><span>Success:
+                                            <strong id="chSuccess">0</strong></span></div>
+                                    <div class="progress-stat"><span class="dot dot-failed"></span><span>Failed: <strong
+                                                id="chFailed">0</strong></span></div>
+                                    <div class="progress-stat"><span class="dot dot-pending"></span><span>Pending:
+                                            <strong id="chPending">0</strong></span></div>
+                                    <div class="progress-stat"><span class="dot dot-retry"></span><span>Retry: <strong
+                                                id="chRetry">0</strong></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LIVE TIMELINE PREVIEW -->
+                        <div class="timeline-preview-section glass-card">
+                            <div class="section-header">
+                                <h3><i data-lucide="images"></i> Live Timeline Preview</h3>
+                                <span class="timeline-badge">Real Images</span>
+                            </div>
+                            <div class="timeline-gallery-grid" id="timelineGalleryGrid">
+                                <div class="empty-timeline-state">
+                                    <i data-lucide="image" class="icon-xl"
+                                        style="color: var(--text-muted); opacity: 0.5;"></i>
+                                    <p>Start generation to see real images here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COOKIES -->
+                <div class="page" id="page-cookies">
+                    <div class="section-header">
+                        <h3><i data-lucide="key-round"></i> Login Cookies Management</h3>
+                        <button class="neon-btn-sm" onclick="openAddCookieModal()"><i data-lucide="plus"
+                                class="icon-sm"></i> Add Cookie</button>
+                    </div>
+                    <div class="cookie-help-text glass-card">
+                        <p><i data-lucide="info" class="icon-sm"></i> <strong>How to get cookies:</strong> Login to TAAFT in your browser → Open DevTools (F12) → Application → Cookies → Copy the <code>token</code> cookie value. Or export all cookies as JSON.</p>
+                    </div>
+                    <div class="cookies-list" id="cookiesList"></div>
+                </div>
+
+                <!-- TRACKING -->
+                <div class="page" id="page-tracking">
+                    <div class="section-header">
+                        <h3><i data-lucide="activity"></i> Real-Time Tracking</h3>
+                        <div class="tracking-status">
+                            <span class="status-dot status-live" id="trackingDot"></span>
+                            <span id="trackingStatus">Live from Backend Engine</span>
+                        </div>
+                    </div>
+                    <div class="tracking-grid">
+                        <div class="glass-card tracking-feed-card">
+                            <h4><i data-lucide="radio" class="icon-sm"></i> Live Activity Feed</h4>
+                            <div class="activity-feed" id="activityFeed">
+                                <div class="feed-item feed-info"><span class="feed-time">--:--</span><span
+                                        class="feed-msg">Waiting for engine activity...</span></div>
+                            </div>
+                        </div>
+                        <div class="glass-card tracking-summary-card">
+                            <h4><i data-lucide="trending-up" class="icon-sm"></i> Summary</h4>
+                            <div class="tracking-stats">
+                                <div class="track-stat">
+                                    <div class="track-stat-circle success-circle"><span id="trackSuccess">0</span></div>
+                                    <span>Success</span>
+                                </div>
+                                <div class="track-stat">
+                                    <div class="track-stat-circle failed-circle"><span id="trackFailed">0</span></div>
+                                    <span>Failed</span>
+                                </div>
+                                <div class="track-stat">
+                                    <div class="track-stat-circle retry-circle"><span id="trackRetry">0</span></div>
+                                    <span>Retry</span>
+                                </div>
+                                <div class="track-stat">
+                                    <div class="track-stat-circle pending-circle"><span id="trackPending">0</span></div>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chapter-tracking-list" id="chapterTrackingList"></div>
+                </div>
+
+                <!-- DOWNLOADS -->
+                <div class="page" id="page-downloads">
+                    <div class="section-header">
+                        <h3><i data-lucide="folder-down"></i> Downloads</h3>
+                        <button class="neon-btn-sm" onclick="downloadAllZip()"><i data-lucide="package"
+                                class="icon-sm"></i> Download All</button>
+                    </div>
+                    <div class="downloads-grid" id="downloadsGrid"></div>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="page" id="page-settings">
+                    <div class="section-header">
+                        <h3><i data-lucide="settings"></i> Settings</h3>
+                    </div>
+                    <div class="settings-grid">
+                        <div class="glass-card settings-card">
+                            <h4><i data-lucide="timer" class="icon-sm"></i> Automation</h4>
+                            <div class="setting-item">
+                                <label>Wait Time Between Prompts (seconds)</label>
+                                <input type="number" class="cyber-input" value="10" min="5" max="120" id="waitTime">
+                            </div>
+                            <div class="setting-item">
+                                <label>Auto Retry Failed Prompts</label>
+                                <label class="cyber-toggle"><input type="checkbox" checked id="autoRetry"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <label>Max Retry Attempts</label>
+                                <input type="number" class="cyber-input" value="3" min="1" max="10" id="maxRetry">
+                            </div>
+                        </div>
+                        <div class="glass-card settings-card">
+                            <h4><i data-lucide="server" class="icon-sm"></i> Backend Server</h4>
+                            <div class="setting-item">
+                                <label>Server URL</label>
+                                <input type="text" class="cyber-input" value="http://localhost:5050" disabled>
+                            </div>
+                            <div class="setting-item">
+                                <label>Headless Mode</label>
+                                <p class="setting-help">Set HEADLESS=True in backend_server.py for invisible browser</p>
+                            </div>
+                        </div>
+                        <div class="glass-card settings-card">
+                            <h4><i data-lucide="file" class="icon-sm"></i> File Naming</h4>
+                            <div class="setting-item">
+                                <label>Image Naming Pattern</label>
+                                <select class="cyber-select" id="namingPattern">
+                                    <option value="chapter_prompt">chapter1_001.png</option>
+                                    <option value="prompt_text">magic_forest_001.png</option>
+                                    <option value="sequential">image_001.png</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="addModelModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i data-lucide="palette"></i> Add Custom Model</h3>
+                <button class="modal-close" onclick="closeModal('addModelModal')"><i data-lucide="x"
+                        class="icon-sm"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Model Name</label><input type="text" class="cyber-input"
+                        id="newModelName" placeholder="e.g., Epic Comic Book Portrait"></div>
+                <div class="form-group"><label>Model ID / TAAFT Tool URL</label><input type="text" class="cyber-input"
+                        id="newModelId" placeholder="e.g., epic-comic-book-portrait-in-striking-detail"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="neon-btn-sm" onclick="addCustomModel()">Add Model</button>
+                <button class="neon-btn-sm btn-secondary" onclick="closeModal('addModelModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addCookieModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i data-lucide="key-round"></i> Add Login Cookie</h3>
+                <button class="modal-close" onclick="closeModal('addCookieModal')"><i data-lucide="x"
+                        class="icon-sm"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Account Name / Label</label><input type="text" class="cyber-input"
+                        id="cookieLabel" placeholder="e.g., Account 1 — claire@gmail.com"></div>
+                <div class="form-group">
+                    <label>Cookie Data</label>
+                    <textarea class="cyber-input" id="cookieValue" rows="5"
+                        placeholder="Paste token value OR full JSON cookie array here. Examples:&#10;&#10;Token: eyJhbGci...&#10;&#10;OR JSON: [{&quot;name&quot;:&quot;token&quot;,&quot;value&quot;:&quot;eyJ...&quot;,...}]"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="neon-btn-sm" onclick="addCookie()">Save Cookie</button>
+                <button class="neon-btn-sm btn-secondary" onclick="closeModal('addCookieModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="bulkImportModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i data-lucide="upload"></i> Bulk Import Prompts</h3>
+                <button class="modal-close" onclick="closeModal('bulkImportModal')"><i data-lucide="x"
+                        class="icon-sm"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Paste prompts (one per line, max 50)</label><textarea class="cyber-input"
+                        id="bulkPromptInput" rows="10" placeholder="Prompt 1&#10;Prompt 2&#10;Prompt 3"></textarea>
+                </div>
+                <p class="help-text">Each line = 1 prompt. Maximum 50 per chapter.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="neon-btn-sm" onclick="processBulkImport()">Import</button>
+                <button class="neon-btn-sm btn-secondary" onclick="closeModal('bulkImportModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
