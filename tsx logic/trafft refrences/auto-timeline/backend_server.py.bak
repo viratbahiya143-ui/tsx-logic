@@ -1,0 +1,1015 @@
+"""
+AUTO TIMELINE — Real Backend Server
+Flask API + Playwright automation engine for TAAFT image generation.
+Connects the frontend dashboard to real image generation.
+
+FIX: All Playwright operations run on a single dedicated thread to avoid
+greenlet threading crashes.
+"""
+
+import os
+import sys
+import json
+import time
+import glob
+import base64
+import logging
+import threading
+import traceback
+import queue
+from datetime import datetime
+from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask_cors import CORS
+
+# Playwright import
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    print("WARNING: Playwright not installed. Install with: pip install playwright && playwright install chromium")
+
+# ==========================================
+# CONFIGURATION
+# ==========================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(BASE_DIR)  # Parent = TRAAFT TEST
+OUTPUT_BASE = os.path.join(PROJECT_DIR, "generated_images")
+COOKIES_DIR = os.path.join(PROJECT_DIR, "cookies")
+LOG_FILE = os.path.join(PROJECT_DIR, "backend_server.log")
+TOOL_URL = "https://theresanaiforthat.com/@niltonjr/epic-comic-book-portrait-in-striking-detail/"
+HEADLESS = False
+PORT = 5050
+
+# ==========================================
+# LOGGING
+# ==========================================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# ==========================================
+# FLASK APP
+# ==========================================
+app = Flask(__name__, static_folder='.', static_url_path='/static')
+CORS(app)
+
+# ==========================================
+# ENGINE STATE
+# ==========================================
+engine_state = {
+    "status": "idle",  # idle, running, paused, error
+    "current_chapter": None,
+    "current_prompt_index": -1,
+    "chapters": {},  # chapter_id -> chapter processing state
+    "activity_log": [],
+    "browser_ready": False,
+    "start_time": None,
+}
+
+# Playwright browser instance (shared, only accessed from pw_thread)
+browser_instance = {
+    "playwright": None,
+    "browser": None,
+    "contexts": {},  # cookie_id -> context
+}
+
+# Thread lock for engine state
+state_lock = threading.Lock()
+
+# ==========================================
+# PLAYWRIGHT THREAD — single dedicated thread
+# All Playwright calls go through this queue
+# ==========================================
+pw_queue = queue.Queue()
+pw_thread = None
+pw_thread_ready = threading.Event()
+
+def pw_worker():
+    """
+    Single thread that owns all Playwright objects.
+    Reads (callable, result_event, result_holder) from pw_queue and executes them.
+    """
+    pw_thread_ready.set()
+    while True:
+        item = pw_queue.get()
+        if item is None:
+            break  # shutdown signal
+        func, result_event, result_holder = item
+        try:
+            result_holder["value"] = func()
+            result_holder["error"] = None
+        except Exception as e:
+            result_holder["value"] = None
+            result_holder["error"] = e
+        result_event.set()
+
+def run_on_pw_thread(func, timeout=300):
+    """
+    Submit a callable to the Playwright thread and wait for result.
+    This is the ONLY way to interact with Playwright objects.
+    """
+    result_holder = {"value": None, "error": None}
+    result_event = threading.Event()
+    pw_queue.put((func, result_event, result_holder))
+    result_event.wait(timeout=timeout)
+    if result_holder["error"]:
+        raise result_holder["error"]
+    return result_holder["value"]
+
+def start_pw_thread():
+    """Start the dedicated Playwright worker thread."""
+    global pw_thread
+    if pw_thread and pw_thread.is_alive():
+        return
+    pw_thread_ready.clear()
+    pw_thread = threading.Thread(target=pw_worker, daemon=True, name="PlaywrightThread")
+    pw_thread.start()
+    pw_thread_ready.wait(timeout=5)
+    logger.info("Playwright worker thread started.")
+
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
+def ensure_dir(d):
+    os.makedirs(d, exist_ok=True)
+
+def add_log(msg_type, message, chapter_id=None):
+    """Add to activity log."""
+    entry = {
+        "timestamp": time.time(),
+        "type": msg_type.upper(),
+        "message": message,
+        "chapter_id": chapter_id,
+    }
+    with state_lock:
+        engine_state["activity_log"].append(entry)
+        # Keep last 500 entries
+        if len(engine_state["activity_log"]) > 500:
+            engine_state["activity_log"] = engine_state["activity_log"][-500:]
+    
+    log_msg = f"[{msg_type.upper()}] {message}"
+    if msg_type.lower() == "error":
+        logger.error(log_msg)
+    elif msg_type.lower() == "warning":
+        logger.warning(log_msg)
+    else:
+        logger.info(log_msg)
+
+def get_chapter_output_dir(chapter_id, chapter_name):
+    """Get output directory for a chapter."""
+    safe_name = "".join(c if c.isalnum() or c in " _-" else "_" for c in chapter_name).strip()
+    if not safe_name:
+        safe_name = f"chapter_{chapter_id}"
+    output_dir = os.path.join(OUTPUT_BASE, safe_name)
+    ensure_dir(output_dir)
+    return output_dir
+
+def get_next_file_number(output_dir):
+    """Get next sequential file number."""
+    existing = glob.glob(os.path.join(output_dir, "*.png"))
+    numbers = []
+    for f in existing:
+        name = os.path.splitext(os.path.basename(f))[0]
+        try:
+            numbers.append(int(name))
+        except ValueError:
+            pass
+    return max(numbers, default=0) + 1
+
+# ==========================================
+# COOKIE MANAGEMENT
+# ==========================================
+def get_cookies_dir():
+    ensure_dir(COOKIES_DIR)
+    return COOKIES_DIR
+
+def save_cookie_file(cookie_id, cookie_data):
+    """Save cookie data to a JSON file."""
+    filepath = os.path.join(get_cookies_dir(), f"cookie_{cookie_id}.json")
+    with open(filepath, "w") as f:
+        json.dump(cookie_data, f, indent=2)
+    return filepath
+
+def load_cookie_file(cookie_id):
+    """Load cookie data from file."""
+    filepath = os.path.join(get_cookies_dir(), f"cookie_{cookie_id}.json")
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            return json.load(f)
+    return None
+
+def validate_cookie_data(cookie_string):
+    """Parse and validate cookie string. Supports JSON array format or token string."""
+    try:
+        # Try JSON array format first
+        data = json.loads(cookie_string)
+        if isinstance(data, list):
+            return data
+        elif isinstance(data, dict):
+            return [data]
+    except (json.JSONDecodeError, TypeError):
+        pass
+    
+    # Try as a simple token value
+    cookie_string = cookie_string.strip()
+    if cookie_string:
+        return [{
+            "name": "token",
+            "value": cookie_string,
+            "domain": ".theresanaiforthat.com",
+            "path": "/",
+            "httpOnly": False,
+            "secure": True,
+            "sameSite": "Lax"
+        }]
+    return None
+
+def normalize_cookies_for_playwright(cookies):
+    """
+    Convert browser-exported cookies to Playwright-compatible format.
+    Browser exports have fields like expirationDate, hostOnly, storeId, sameSite=null
+    that crash Playwright's add_cookies(). This strips/converts them.
+    """
+    # Fields Playwright accepts
+    VALID_FIELDS = {"name", "value", "domain", "path", "expires", "httpOnly", "secure", "sameSite", "url"}
+    VALID_SAMESITE = {"Strict", "Lax", "None"}
+    
+    normalized = []
+    for raw in cookies:
+        if not isinstance(raw, dict):
+            continue
+        if "name" not in raw or "value" not in raw:
+            continue
+        
+        c = {}
+        # Copy only valid fields
+        for key in VALID_FIELDS:
+            if key in raw and raw[key] is not None:
+                c[key] = raw[key]
+        
+        # Convert expirationDate -> expires  (browser export format)
+        if "expires" not in c and "expirationDate" in raw and raw["expirationDate"]:
+            exp = raw["expirationDate"]
+            if isinstance(exp, (int, float)) and exp > 0:
+                c["expires"] = int(exp)
+        
+        # Fix sameSite: must be "Strict", "Lax", or "None" — never null/empty
+        if "sameSite" not in c or c.get("sameSite") not in VALID_SAMESITE:
+            c["sameSite"] = "Lax"
+        
+        # Ensure domain exists
+        if "domain" not in c:
+            c["domain"] = ".theresanaiforthat.com"
+        
+        # Ensure path exists
+        if "path" not in c:
+            c["path"] = "/"
+        
+        normalized.append(c)
+    
+    return normalized
+
+# ==========================================
+# PLAYWRIGHT ENGINE
+# All these functions MUST be called from the PW thread (via run_on_pw_thread)
+# ==========================================
+def _init_browser():
+    """Initialize Playwright browser. MUST run on pw_thread."""
+    if not PLAYWRIGHT_AVAILABLE:
+        add_log("error", "Playwright not available! Install it first.")
+        return False
+    
+    try:
+        if browser_instance["browser"]:
+            return True  # Already running
+        
+        pw = sync_playwright().start()
+        browser = pw.chromium.launch(
+            headless=HEADLESS,
+            args=["--disable-blink-features=AutomationControlled"]
+        )
+        browser_instance["playwright"] = pw
+        browser_instance["browser"] = browser
+        engine_state["browser_ready"] = True
+        add_log("success", "Browser engine started successfully!")
+        return True
+    except Exception as e:
+        add_log("error", f"Failed to start browser: {e}")
+        logger.error(traceback.format_exc())
+        return False
+
+def _close_browser():
+    """Close browser and cleanup. MUST run on pw_thread."""
+    try:
+        for ctx_id, ctx in browser_instance["contexts"].items():
+            try:
+                ctx.close()
+            except:
+                pass
+        browser_instance["contexts"] = {}
+        
+        if browser_instance["browser"]:
+            browser_instance["browser"].close()
+            browser_instance["browser"] = None
+        if browser_instance["playwright"]:
+            browser_instance["playwright"].stop()
+            browser_instance["playwright"] = None
+        
+        engine_state["browser_ready"] = False
+        add_log("info", "Browser engine stopped.")
+    except Exception as e:
+        logger.error(f"Error closing browser: {e}")
+
+def _create_context_for_cookie(cookie_id, cookie_data):
+    """Create a browser context with given cookies. MUST run on pw_thread."""
+    if not browser_instance["browser"]:
+        if not _init_browser():
+            return None, None
+    
+    browser = browser_instance["browser"]
+    
+    ctx = browser.new_context(
+        viewport={'width': 1920, 'height': 1080},
+        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        locale='en-US',
+        accept_downloads=True,
+    )
+    ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
+    
+    # Add cookies — normalize from browser-export format to Playwright format
+    if cookie_data:
+        raw_cookies = cookie_data if isinstance(cookie_data, list) else validate_cookie_data(json.dumps(cookie_data) if isinstance(cookie_data, dict) else cookie_data)
+        if raw_cookies:
+            pw_cookies = normalize_cookies_for_playwright(raw_cookies)
+            if pw_cookies:
+                try:
+                    ctx.add_cookies(pw_cookies)
+                    add_log("info", f"Loaded {len(pw_cookies)} cookies for account {cookie_id}")
+                except Exception as e:
+                    add_log("warning", f"Cookie load error: {e}")
+                    logger.error(f"Cookie add_cookies crash: {e}\nCookies: {json.dumps(pw_cookies, indent=2)}")
+    
+    page = ctx.new_page()
+    browser_instance["contexts"][cookie_id] = ctx
+    return ctx, page
+
+def _verify_login(page):
+    """Check if we're logged in. MUST run on pw_thread."""
+    try:
+        page.goto(TOOL_URL, wait_until="domcontentloaded", timeout=30000)
+        time.sleep(3)
+        url = page.url
+        if "login" in url or "signin" in url:
+            return False
+        return True
+    except Exception as e:
+        add_log("error", f"Login verification failed: {e}")
+        return False
+
+def _find_generated_image_url(page):
+    """Find the generated image URL on the page using JS. MUST run on pw_thread."""
+    result = page.evaluate("""
+        () => {
+            const imgs = document.querySelectorAll('img');
+            let bestUrl = null;
+            let bestArea = 0;
+            
+            for (const img of imgs) {
+                const src = img.src || '';
+                if (src.includes('.svg') || src.includes('logo') || src.includes('icon') || src.includes('avatar') || src.includes('emoji') || src.includes('favicon')) continue;
+                if (!src.startsWith('http') && !src.startsWith('blob') && !src.startsWith('data')) continue;
+                
+                const rect = img.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                const area = w * h;
+                
+                if (w > 200 && h > 200 && area > bestArea) {
+                    bestArea = area;
+                    bestUrl = src;
+                }
+            }
+            return { url: bestUrl, area: bestArea };
+        }
+    """)
+    return result
+
+def _generate_single_image(page, prompt, output_dir, file_number, chapter_id, prompt_index):
+    """
+    Generate a single image on TAAFT. MUST run on pw_thread.
+    Returns: (success: bool, filepath: str|None, time_taken: float)
+    """
+    start_time = time.time()
+    
+    try:
+        add_log("info", f"Navigating to tool...", chapter_id)
+        page.goto(TOOL_URL, wait_until="domcontentloaded")
+        try:
+            page.wait_for_load_state("networkidle", timeout=10000)
+        except:
+            pass
+        time.sleep(2)
+        
+        # Community warning modal
+        try:
+            agree_btn = page.locator("#agree_community_tools_tos")
+            if agree_btn.count() > 0 and agree_btn.is_visible():
+                agree_btn.click()
+                add_log("info", "Dismissed community warning.", chapter_id)
+                time.sleep(1)
+        except:
+            pass
+        
+        # Fill prompt
+        page.wait_for_selector("textarea#user_input", state="visible", timeout=10000)
+        page.locator("textarea#user_input").click()
+        page.keyboard.press("Control+A")
+        page.keyboard.press("Backspace")
+        time.sleep(0.5)
+        page.fill("textarea#user_input", prompt)
+        add_log("info", f"Prompt filled: {prompt[:60]}...", chapter_id)
+        time.sleep(1)
+        
+        # Aspect ratio 16:9
+        try:
+            page.locator("select#aspect_ratio").select_option(label="Landscape(16:9)")
+            add_log("info", "Aspect ratio set to 16:9", chapter_id)
+        except:
+            pass
+        time.sleep(0.5)
+        
+        # Click Generate
+        gen_btn = page.locator("button#generate")
+        gen_btn.click()
+        gen_start = time.time()
+        add_log("info", "Generate clicked! Waiting for image...", chapter_id)
+        
+        # Update state
+        with state_lock:
+            if chapter_id in engine_state["chapters"]:
+                engine_state["chapters"][chapter_id]["current_prompt"] = prompt_index
+                engine_state["chapters"][chapter_id]["gen_start_time"] = gen_start
+        
+        # Poll until image is ready (max 120s)
+        max_wait = 120
+        while True:
+            elapsed = time.time() - gen_start
+            
+            if elapsed > max_wait:
+                add_log("warning", f"Generation timeout ({max_wait}s).", chapter_id)
+                return False, None, time.time() - start_time
+            
+            # Check "Download" link
+            download_link = page.locator("span:has-text('Download')")
+            if download_link.count() > 0 and download_link.first.is_visible():
+                add_log("success", f"Image ready in {elapsed:.0f}s!", chapter_id)
+                break
+            
+            # Check button text
+            try:
+                btn_text = gen_btn.inner_text()
+                if elapsed > 8 and "generat" not in btn_text.lower():
+                    time.sleep(3)
+                    break
+            except:
+                pass
+            
+            time.sleep(2)
+        
+        # Extra wait for image to render
+        time.sleep(5)
+        page.evaluate("window.scrollTo(0, 0)")
+        time.sleep(1)
+        
+        # Find generated image
+        result = _find_generated_image_url(page)
+        img_url = result.get("url")
+        img_area = result.get("area", 0)
+        
+        if not img_url:
+            add_log("error", "Could not find generated image on page!", chapter_id)
+            return False, None, time.time() - start_time
+        
+        add_log("info", f"Found image (area: {img_area}px)", chapter_id)
+        
+        # Download image
+        filepath = os.path.join(output_dir, f"{file_number}.png")
+        
+        new_tab = page.context.new_page()
+        try:
+            new_tab.goto(img_url, wait_until="load", timeout=30000)
+            time.sleep(2)
+            resp = new_tab.request.get(img_url)
+            img_bytes = resp.body()
+            
+            with open(filepath, "wb") as f:
+                f.write(img_bytes)
+            
+            add_log("info", f"Downloaded {len(img_bytes)} bytes", chapter_id)
+        except Exception as e:
+            add_log("warning", f"New tab download failed: {e}. Trying direct...", chapter_id)
+            try:
+                resp = page.request.get(img_url)
+                with open(filepath, "wb") as f:
+                    f.write(resp.body())
+            except Exception as e2:
+                add_log("error", f"Direct download also failed: {e2}", chapter_id)
+                return False, None, time.time() - start_time
+        finally:
+            new_tab.close()
+        
+        # Verify
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 5000:
+            size_kb = os.path.getsize(filepath) / 1024
+            total_time = time.time() - start_time
+            add_log("success", f"Image saved: {file_number}.png ({size_kb:.0f} KB) in {total_time:.1f}s", chapter_id)
+            return True, filepath, total_time
+        else:
+            add_log("error", f"File too small or missing.", chapter_id)
+            return False, None, time.time() - start_time
+        
+    except PlaywrightTimeoutError:
+        add_log("error", "Playwright timeout.", chapter_id)
+        return False, None, time.time() - start_time
+    except Exception as e:
+        add_log("error", f"Error: {e}", chapter_id)
+        logger.error(traceback.format_exc())
+        return False, None, time.time() - start_time
+
+
+def _process_chapter_on_pw_thread(chapter_data):
+    """
+    Process all prompts for a chapter. Runs ENTIRELY on the pw_thread.
+    """
+    chapter_id = chapter_data["id"]
+    chapter_name = chapter_data.get("name", f"Chapter {chapter_id}")
+    prompts = chapter_data.get("prompts", [])
+    cookie_id = chapter_data.get("cookie_id")
+    cookie_data = chapter_data.get("cookie_data")
+    max_retries = chapter_data.get("max_retries", 2)
+    wait_between = chapter_data.get("wait_between", 10)
+    
+    add_log("info", f"Starting chapter: {chapter_name} ({len(prompts)} prompts)", chapter_id)
+    
+    # Initialize chapter state
+    with state_lock:
+        engine_state["chapters"][chapter_id] = {
+            "status": "running",
+            "total_prompts": len(prompts),
+            "current_prompt": 0,
+            "success_count": 0,
+            "failed_count": 0,
+            "prompt_times": [],
+            "prompt_results": [],
+            "start_time": time.time(),
+            "gen_start_time": None,
+            "estimated_remaining": None,
+        }
+        engine_state["status"] = "running"
+        engine_state["current_chapter"] = chapter_id
+    
+    output_dir = get_chapter_output_dir(chapter_id, chapter_name)
+    file_num = get_next_file_number(output_dir)
+    
+    # Create browser context with cookies (already on pw_thread)
+    ctx, page = _create_context_for_cookie(cookie_id, cookie_data)
+    if not page:
+        add_log("error", f"Failed to create browser context for {chapter_name}", chapter_id)
+        with state_lock:
+            engine_state["chapters"][chapter_id]["status"] = "error"
+            engine_state["status"] = "idle"
+            engine_state["current_chapter"] = None
+        return
+    
+    # Verify login
+    if not _verify_login(page):
+        add_log("error", f"Not logged in for {chapter_name}! Check cookies.", chapter_id)
+        with state_lock:
+            engine_state["chapters"][chapter_id]["status"] = "error"
+            engine_state["status"] = "idle"
+            engine_state["current_chapter"] = None
+        try:
+            ctx.close()
+        except:
+            pass
+        return
+    
+    add_log("success", f"Login verified for {chapter_name}", chapter_id)
+    
+    total = len(prompts)
+    
+    for idx, prompt_data in enumerate(prompts):
+        # Check if paused or stopped
+        with state_lock:
+            ch_state = engine_state["chapters"].get(chapter_id, {})
+            if ch_state.get("status") in ("paused", "stopped"):
+                add_log("warning", f"Chapter {chapter_name} paused/stopped.", chapter_id)
+                break
+        
+        prompt_text = prompt_data if isinstance(prompt_data, str) else prompt_data.get("text", "")
+        
+        add_log("info", f"[{chapter_name}] Prompt {idx+1}/{total}: {prompt_text[:50]}...", chapter_id)
+        
+        with state_lock:
+            engine_state["chapters"][chapter_id]["current_prompt"] = idx
+        
+        success = False
+        image_path = None
+        prompt_time = 0
+        
+        for attempt in range(max_retries + 1):
+            if attempt > 0:
+                add_log("warning", f"Retry #{attempt} for prompt {idx+1}", chapter_id)
+                time.sleep(3)
+            
+            ok, path, t = _generate_single_image(page, prompt_text, output_dir, file_num, chapter_id, idx)
+            prompt_time = t
+            
+            if ok:
+                success = True
+                image_path = path
+                break
+        
+        # Update chapter state
+        with state_lock:
+            ch = engine_state["chapters"][chapter_id]
+            result = {
+                "index": idx,
+                "prompt": prompt_text,
+                "status": "success" if success else "failed",
+                "time_taken": prompt_time,
+                "image_path": image_path,
+                "image_filename": f"{file_num}.png" if success else None,
+                "file_number": file_num if success else None,
+            }
+            ch["prompt_results"].append(result)
+            ch["prompt_times"].append(prompt_time)
+            
+            if success:
+                ch["success_count"] += 1
+                file_num += 1
+            else:
+                ch["failed_count"] += 1
+            
+            # Calculate ETA
+            avg_time = sum(ch["prompt_times"]) / len(ch["prompt_times"])
+            remaining = total - (idx + 1)
+            ch["estimated_remaining"] = avg_time * remaining
+        
+        if success:
+            add_log("success", f"[{chapter_name}] Prompt {idx+1} completed! ({prompt_time:.1f}s)", chapter_id)
+        else:
+            add_log("error", f"[{chapter_name}] Prompt {idx+1} FAILED after {max_retries+1} attempts", chapter_id)
+        
+        # Wait between prompts
+        if idx < total - 1:
+            add_log("info", f"Waiting {wait_between}s before next prompt...", chapter_id)
+            time.sleep(wait_between)
+    
+    # Chapter done
+    with state_lock:
+        ch = engine_state["chapters"][chapter_id]
+        ch["status"] = "done"
+        ch["end_time"] = time.time()
+        total_time = ch["end_time"] - ch["start_time"]
+        engine_state["status"] = "idle"
+        engine_state["current_chapter"] = None
+    
+    add_log("success", f"Chapter '{chapter_name}' DONE! Success: {ch['success_count']}/{total}, Failed: {ch['failed_count']}/{total}, Total time: {total_time:.0f}s", chapter_id)
+    
+    # Close context
+    try:
+        ctx.close()
+        if cookie_id in browser_instance["contexts"]:
+            del browser_instance["contexts"][cookie_id]
+    except:
+        pass
+
+
+# ==========================================
+# API ROUTES
+# ==========================================
+
+@app.route('/')
+def serve_index():
+    return send_file(os.path.join(BASE_DIR, 'index.html'))
+
+@app.route('/style.css')
+def serve_css():
+    return send_file(os.path.join(BASE_DIR, 'style.css'))
+
+@app.route('/script.js')
+def serve_js():
+    return send_file(os.path.join(BASE_DIR, 'script.js'))
+
+# --- Engine Status ---
+@app.route('/api/status')
+def api_status():
+    with state_lock:
+        return jsonify({
+            "engine_status": engine_state["status"],
+            "browser_ready": engine_state["browser_ready"],
+            "current_chapter": engine_state["current_chapter"],
+            "playwright_available": PLAYWRIGHT_AVAILABLE,
+        })
+
+@app.route('/api/engine/start', methods=['POST'])
+def api_engine_start():
+    """Start the browser engine."""
+    # Make sure pw_thread is running
+    start_pw_thread()
+    
+    try:
+        result = run_on_pw_thread(_init_browser, timeout=30)
+        return jsonify({
+            "success": engine_state["browser_ready"],
+            "message": "Browser engine started" if engine_state["browser_ready"] else "Failed to start"
+        })
+    except Exception as e:
+        logger.error(f"Engine start error: {e}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"})
+
+@app.route('/api/engine/stop', methods=['POST'])
+def api_engine_stop():
+    """Stop the browser engine."""
+    try:
+        run_on_pw_thread(_close_browser, timeout=15)
+    except Exception as e:
+        logger.error(f"Engine stop error: {e}")
+    return jsonify({"success": True, "message": "Browser engine stopped"})
+
+# --- Cookie Management ---
+@app.route('/api/cookies', methods=['GET'])
+def api_get_cookies():
+    """List all saved cookies."""
+    cookies_dir = get_cookies_dir()
+    cookies = []
+    for f in glob.glob(os.path.join(cookies_dir, "cookie_*.json")):
+        cookie_id = os.path.basename(f).replace("cookie_", "").replace(".json", "")
+        try:
+            with open(f, 'r') as fh:
+                data = json.load(fh)
+            cookies.append({
+                "id": cookie_id,
+                "filename": os.path.basename(f),
+                "cookie_count": len(data) if isinstance(data, list) else 1,
+                "preview": json.dumps(data)[:60] + "...",
+            })
+        except:
+            pass
+    return jsonify(cookies)
+
+@app.route('/api/cookies', methods=['POST'])
+def api_add_cookie():
+    """Add a new cookie."""
+    data = request.json
+    cookie_id = data.get("id", str(int(time.time())))
+    cookie_value = data.get("value", "")
+    label = data.get("label", f"Account {cookie_id}")
+    
+    parsed = validate_cookie_data(cookie_value)
+    if not parsed:
+        return jsonify({"success": False, "message": "Invalid cookie data"}), 400
+    
+    save_cookie_file(cookie_id, parsed)
+    add_log("success", f"Cookie saved: {label} ({len(parsed)} cookies)")
+    return jsonify({"success": True, "id": cookie_id, "message": f"Cookie '{label}' saved!"})
+
+@app.route('/api/cookies/<cookie_id>', methods=['DELETE'])
+def api_delete_cookie(cookie_id):
+    filepath = os.path.join(get_cookies_dir(), f"cookie_{cookie_id}.json")
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        add_log("info", f"Cookie {cookie_id} deleted")
+        return jsonify({"success": True})
+    return jsonify({"success": False, "message": "Not found"}), 404
+
+@app.route('/api/cookies/validate/<cookie_id>', methods=['POST'])
+def api_validate_cookie(cookie_id):
+    """Validate a cookie by trying to login."""
+    cookie_data = load_cookie_file(cookie_id)
+    if not cookie_data:
+        return jsonify({"success": False, "message": "Cookie file not found"})
+    
+    # Ensure pw thread is running and browser is ready
+    start_pw_thread()
+    
+    def do_validate():
+        ctx, page = _create_context_for_cookie(cookie_id, cookie_data)
+        if not page:
+            return {"success": False, "message": "Failed to create browser. Start the engine first."}
+        
+        logged_in = _verify_login(page)
+        try:
+            ctx.close()
+            if cookie_id in browser_instance["contexts"]:
+                del browser_instance["contexts"][cookie_id]
+        except:
+            pass
+        
+        return {"success": logged_in, "message": "Login valid!" if logged_in else "Cookie expired or invalid"}
+    
+    try:
+        result = run_on_pw_thread(do_validate, timeout=60)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Validation error: {e}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"})
+
+# --- Chapter Processing ---
+@app.route('/api/chapter/start', methods=['POST'])
+def api_start_chapter():
+    """Start processing a chapter."""
+    data = request.json
+    chapter_id = str(data.get("id", int(time.time())))
+    chapter_name = data.get("name", "Unnamed Chapter")
+    prompts = data.get("prompts", [])
+    cookie_id = data.get("cookie_id")
+    cookie_value = data.get("cookie_value")
+    max_retries = data.get("max_retries", 2)
+    wait_between = data.get("wait_between", 10)
+    
+    if not prompts:
+        return jsonify({"success": False, "message": "No prompts provided"}), 400
+    
+    # Load cookie data
+    cookie_data = None
+    if cookie_id:
+        cookie_data = load_cookie_file(cookie_id)
+    if not cookie_data and cookie_value:
+        cookie_data = validate_cookie_data(cookie_value)
+    
+    if not cookie_data:
+        return jsonify({"success": False, "message": "No valid cookie provided"}), 400
+    
+    # Ensure pw thread is running
+    start_pw_thread()
+    
+    # Build chapter data
+    chapter_data = {
+        "id": chapter_id,
+        "name": chapter_name,
+        "prompts": prompts,
+        "cookie_id": cookie_id,
+        "cookie_data": cookie_data,
+        "max_retries": max_retries,
+        "wait_between": wait_between,
+    }
+    
+    # Submit the ENTIRE chapter processing to the pw_thread
+    # This runs asynchronously — we don't wait for it to finish
+    def submit_chapter():
+        result_holder = {"value": None, "error": None}
+        result_event = threading.Event()
+        pw_queue.put((lambda: _process_chapter_on_pw_thread(chapter_data), result_event, result_holder))
+        # Don't wait — let it run in background on the pw_thread
+    
+    submit_chapter()
+    
+    add_log("info", f"Chapter '{chapter_name}' queued for processing")
+    return jsonify({"success": True, "chapter_id": chapter_id, "message": f"Processing started for {chapter_name}"})
+
+@app.route('/api/chapter/<chapter_id>/pause', methods=['POST'])
+def api_pause_chapter(chapter_id):
+    """Pause a running chapter."""
+    with state_lock:
+        if chapter_id in engine_state["chapters"]:
+            engine_state["chapters"][chapter_id]["status"] = "paused"
+            return jsonify({"success": True, "message": "Chapter paused"})
+    return jsonify({"success": False, "message": "Chapter not found"})
+
+@app.route('/api/chapter/<chapter_id>/stop', methods=['POST'])
+def api_stop_chapter(chapter_id):
+    """Stop a running chapter."""
+    with state_lock:
+        if chapter_id in engine_state["chapters"]:
+            engine_state["chapters"][chapter_id]["status"] = "stopped"
+            return jsonify({"success": True, "message": "Chapter stopped"})
+    return jsonify({"success": False, "message": "Chapter not found"})
+
+@app.route('/api/chapter/<chapter_id>/status')
+def api_chapter_status(chapter_id):
+    """Get detailed chapter processing status."""
+    with state_lock:
+        ch = engine_state["chapters"].get(chapter_id)
+        if not ch:
+            return jsonify({"found": False})
+        
+        # Calculate timing
+        elapsed = time.time() - ch["start_time"] if ch.get("start_time") else 0
+        avg_per_prompt = (sum(ch["prompt_times"]) / len(ch["prompt_times"])) if ch["prompt_times"] else 0
+        
+        return jsonify({
+            "found": True,
+            "status": ch["status"],
+            "total_prompts": ch["total_prompts"],
+            "current_prompt": ch["current_prompt"],
+            "success_count": ch["success_count"],
+            "failed_count": ch["failed_count"],
+            "elapsed_seconds": elapsed,
+            "avg_per_prompt": avg_per_prompt,
+            "estimated_remaining": ch.get("estimated_remaining", 0),
+            "prompt_results": ch.get("prompt_results", []),
+        })
+
+# --- Activity Log ---
+@app.route('/api/logs')
+def api_logs():
+    since = request.args.get("since", 0, type=float)
+    with state_lock:
+        logs = [l for l in engine_state["activity_log"] if l["timestamp"] > since]
+    return jsonify(logs)
+
+# --- Images ---
+@app.route('/api/images/<chapter_name>/<filename>')
+def api_serve_image(chapter_name, filename):
+    """Serve a generated image."""
+    img_dir = os.path.join(OUTPUT_BASE, chapter_name)
+    if os.path.exists(os.path.join(img_dir, filename)):
+        return send_from_directory(img_dir, filename)
+    return jsonify({"error": "Image not found"}), 404
+
+@app.route('/api/images/<chapter_name>')
+def api_list_images(chapter_name):
+    """List all images for a chapter."""
+    img_dir = os.path.join(OUTPUT_BASE, chapter_name)
+    if not os.path.exists(img_dir):
+        return jsonify([])
+    
+    images = []
+    for f in sorted(glob.glob(os.path.join(img_dir, "*.png"))):
+        fname = os.path.basename(f)
+        size = os.path.getsize(f)
+        images.append({
+            "filename": fname,
+            "size_kb": round(size / 1024, 1),
+            "url": f"/api/images/{chapter_name}/{fname}",
+            "created": os.path.getctime(f),
+        })
+    return jsonify(images)
+
+@app.route('/api/image-thumbnail/<chapter_name>/<filename>')
+def api_image_thumbnail(chapter_name, filename):
+    """Serve image as base64 for inline preview."""
+    img_path = os.path.join(OUTPUT_BASE, chapter_name, filename)
+    if os.path.exists(img_path):
+        with open(img_path, "rb") as f:
+            data = base64.b64encode(f.read()).decode()
+        return jsonify({"data": f"data:image/png;base64,{data}"})
+    return jsonify({"error": "Not found"}), 404
+
+# --- All chapters status ---
+@app.route('/api/chapters/status')
+def api_all_chapters_status():
+    """Get status of all chapters being processed."""
+    with state_lock:
+        result = {}
+        for ch_id, ch in engine_state["chapters"].items():
+            elapsed = time.time() - ch["start_time"] if ch.get("start_time") else 0
+            avg_per = (sum(ch["prompt_times"]) / len(ch["prompt_times"])) if ch["prompt_times"] else 0
+            
+            result[ch_id] = {
+                "status": ch["status"],
+                "total": ch["total_prompts"],
+                "current": ch["current_prompt"],
+                "success": ch["success_count"],
+                "failed": ch["failed_count"],
+                "elapsed": elapsed,
+                "avg_per_prompt": avg_per,
+                "eta": ch.get("estimated_remaining", 0),
+                "results": ch.get("prompt_results", []),
+            }
+        return jsonify(result)
+
+
+# ==========================================
+# MAIN
+# ==========================================
+if __name__ == '__main__':
+    ensure_dir(OUTPUT_BASE)
+    ensure_dir(COOKIES_DIR)
+    
+    logger.info("=" * 60)
+    logger.info("AUTO TIMELINE — Backend Server")
+    logger.info(f"Port: {PORT}")
+    logger.info(f"Output: {OUTPUT_BASE}")
+    logger.info(f"Cookies: {COOKIES_DIR}")
+    logger.info(f"Playwright: {'Available' if PLAYWRIGHT_AVAILABLE else 'NOT INSTALLED'}")
+    logger.info("=" * 60)
+    
+    # Start the dedicated Playwright worker thread
+    start_pw_thread()
+    
+    print(f"\n>>> Server starting at http://localhost:{PORT}")
+    print(f">>> Images saved to: {OUTPUT_BASE}")
+    print(f">>> Cookies stored in: {COOKIES_DIR}")
+    print(f"\nOpen http://localhost:{PORT} in your browser\n")
+    
+    app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
