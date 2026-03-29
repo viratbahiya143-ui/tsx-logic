@@ -1,0 +1,94 @@
+Here is a TSX component for Claude Opus intro video:
+
+```tsx
+import React from 'react';
+import { useCurrentFrame, useVideoConfig, interpolate, Easing, AbsoluteFill } from 'remotion';
+
+export const compositionConfig = {
+  id: 'ClaudeOpusIntro',
+  durationInSeconds: 8,
+  fps: 30,
+  width: 1920,
+  height: 1080,
+};
+
+const COLORS = {
+  yellow: { light: '#FEF9C3', soft: '#FDE68A', medium: '#FBBF24', vibrant: '#F59E0B' },
+  blue: { light: '#DBEAFE', soft: '#93C5FD', medium: '#3B82F6', vibrant: '#2563EB' },
+  text: { dark: '#1E293B', medium: '#475569', light: '#94A3B8' },
+};
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const orbs = Array.from({ length: 5 }, (_, i) => ({
+  x: seededRandom(i + 1) * 100,
+  y: seededRandom(i + 10) * 100,
+  size: 150 + seededRandom(i + 20) * 300,
+  color: i % 2 === 0 ? COLORS.yellow.soft : COLORS.blue.soft,
+}));
+
+const infoItems = [
+  { emoji: '\u{1F4C5}', label: 'Kab Aaya?', value: '5 February 2026' },
+  { emoji: '\u{1F3E2}', label: 'Kisne Banaya?', value: 'Anthropic' },
+  { emoji: '\u{1F4B0}', label: 'Paisa Kiska?', value: 'Google + Amazon' },
+  { emoji: '\u{1F9E0}', label: 'Hai Kya?', value: 'Sabse Smart AI' },
+  { emoji: '\u{1F3AF}', label: 'Kiske Liye?', value: 'Doctors \u00B7 Bankers \u00B7 Lawyers' },
+  { emoji: '\u{1F3C6}', label: 'Record?', value: 'ChatGPT Ko Haara Diya!' },
+];
+
+const Watermark: React.FC<{ frame: number }> = ({ frame }) => {
+  const opacity = interpolate(frame, [15, 30], [0, 0.5], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return (
+    <div style={{ position: 'absolute', bottom: 36, right: 50, opacity, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS.yellow.medium }} />
+      <span style={{ fontSize: 22, fontWeight: 600, color: COLORS.text.light, letterSpacing: 3, fontFamily: 'Inter, system-ui, sans-serif' }}>kuxai.7x</span>
+    </div>
+  );
+};
+
+const ClaudeOpusIntro: React.FC = () => {
+  const frame = useCurrentFrame();
+  const titleOpacity = interpolate(frame, [5, 25], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const titleY = interpolate(frame, [5, 25], [30, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const titleBlur = interpolate(frame, [5, 25], [10, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const subtitleOpacity = interpolate(frame, [20, 38], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const subtitleY = interpolate(frame, [20, 38], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+
+  return (
+    <AbsoluteFill style={{ background: 'linear-gradient(150deg, #FEFCE8 0%, #F8FAFC 40%, #DBEAFE 100%)', fontFamily: 'Inter, SF Pro Display, system-ui, sans-serif', overflow: 'hidden' }}>
+      {orbs.map((orb, i) => {
+        const floatY = Math.sin((frame + i * 80) * 0.025) * 12;
+        const floatX = Math.cos((frame + i * 60) * 0.018) * 8;
+        return (<div key={i} style={{ position: 'absolute', left: orb.x+'%', top: orb.y+'%', width: orb.size, height: orb.size, borderRadius: '50%', background: orb.color, opacity: 0.3, filter: 'blur(60px)', transform: 'translate('+floatX+'px, '+floatY+'px)' }} />);
+      })}
+      <div style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translate(-50%, '+titleY+'px)', opacity: titleOpacity, filter: 'blur('+titleBlur+'px)', textAlign: 'center' }}>
+        <div style={{ fontSize: 82, fontWeight: 800, color: COLORS.text.dark, letterSpacing: -3, margin: 0 }}>CLAUDE OPUS 4.6</div>
+      </div>
+      <div style={{ position: 'absolute', top: '18%', left: '50%', transform: 'translate(-50%, '+subtitleY+'px)', opacity: subtitleOpacity, textAlign: 'center' }}>
+        <span style={{ fontSize: 32, fontWeight: 600, color: COLORS.yellow.vibrant, letterSpacing: 1 }}>AI Ka Naya King</span>
+      </div>
+      <div style={{ position: 'absolute', top: '28%', left: '50%', transform: 'translateX(-50%)', width: '85%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {infoItems.map((item, index) => {
+          const startFrame = 35 + index * 8;
+          const itemOpacity = interpolate(frame, [startFrame, startFrame + 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+          const itemY = interpolate(frame, [startFrame, startFrame + 18], [30, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+          const itemScale = interpolate(frame, [startFrame, startFrame + 18], [0.95, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.back(1.3)) });
+          return (
+            <div key={index} style={{ opacity: itemOpacity, transform: 'translateY('+itemY+'px) scale('+itemScale+')', background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 20, padding: '18px 36px', display: 'flex', alignItems: 'center', gap: 24, border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: index % 2 === 0 ? 'rgba(251,191,36,0.12)' : 'rgba(59,130,246,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{item.emoji}</div>
+              <div style={{ fontSize: 22, fontWeight: 500, color: COLORS.text.light, width: 180, flexShrink: 0 }}>{item.label}</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.text.dark }}>{item.value}</div>
+            </div>
+          );
+        })}
+      </div>
+      <Watermark frame={frame} />
+    </AbsoluteFill>
+  );
+};
+
+export default ClaudeOpusIntro;
+```
