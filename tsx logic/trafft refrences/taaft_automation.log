@@ -1,0 +1,440 @@
+2026-02-28 10:32:49,263 - INFO - Starting TAAFT Comic Automation...
+2026-02-28 10:32:50,315 - INFO - Starting login process...
+2026-02-28 10:33:29,338 - ERROR - Error during login: Page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("button[type='submit']")
+
+2026-02-28 10:33:29,739 - INFO - Saved error screenshot: login_error_20260228_103329.png
+2026-02-28 10:33:29,739 - CRITICAL - Critical error in main loop: Page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("button[type='submit']")
+
+2026-02-28 10:33:29,739 - INFO - Closing browser and saving session...
+2026-02-28 10:33:29,927 - INFO - Automation finished. Check logs and the output directory.
+2026-02-28 10:35:04,420 - INFO - Starting TAAFT Comic Automation...
+2026-02-28 10:35:05,130 - INFO - ============================================================
+2026-02-28 10:35:05,130 - INFO - MANUAL LOGIN REQUIRED
+2026-02-28 10:35:05,130 - INFO - ============================================================
+2026-02-28 10:35:05,131 - INFO - The browser will open the login page now.
+2026-02-28 10:35:05,131 - INFO - Please do the following:
+2026-02-28 10:35:05,131 - INFO -   1. Solve the Cloudflare captcha (if any)
+2026-02-28 10:35:05,131 - INFO -   2. Enter your email and password
+2026-02-28 10:35:05,131 - INFO -   3. Click 'Log in'
+2026-02-28 10:35:05,131 - INFO -   4. Wait until the home page loads
+2026-02-28 10:35:05,131 - INFO - Then come back here and press ENTER in this terminal.
+2026-02-28 10:35:05,131 - INFO - ============================================================
+2026-02-28 10:35:07,981 - INFO - Pre-filled email & password for you. Just solve the captcha and click 'Log in'!
+2026-02-28 11:04:26,699 - INFO - Starting TAAFT Comic Automation...
+2026-02-28 11:04:30,152 - INFO - Loaded 1 cookies from taaft_cookies.json
+2026-02-28 11:04:30,152 - INFO - Cookies loaded. Checking if session is still valid...
+2026-02-28 11:04:34,130 - WARNING - Saved cookies expired. Need to login again.
+2026-02-28 11:04:34,130 - INFO - ============================================================
+2026-02-28 11:04:34,130 - INFO - MANUAL LOGIN REQUIRED
+2026-02-28 11:04:34,130 - INFO - ============================================================
+2026-02-28 11:04:34,130 - INFO - The browser will open the login page now.
+2026-02-28 11:04:34,130 - INFO - Please do the following:
+2026-02-28 11:04:34,130 - INFO -   1. Solve the Cloudflare captcha (if any)
+2026-02-28 11:04:34,130 - INFO -   2. Enter your email and password
+2026-02-28 11:04:34,130 - INFO -   3. Click 'Log in'
+2026-02-28 11:04:34,130 - INFO -   4. Wait until the home page loads
+2026-02-28 11:04:34,130 - INFO - Then come back here and press ENTER in this terminal.
+2026-02-28 11:04:34,130 - INFO - ============================================================
+2026-02-28 11:04:46,119 - INFO - Could not pre-fill fields. Please fill them manually.
+2026-02-28 11:09:36,572 - INFO - Starting TAAFT Comic Automation...
+2026-02-28 11:09:37,322 - INFO - Loaded 1 cookies from taaft_cookies.json
+2026-02-28 11:09:37,323 - INFO - Cookies loaded. Checking if session is still valid...
+2026-02-28 11:09:44,907 - INFO - Session is valid! Already logged in via cookies.
+2026-02-28 11:09:49,053 - INFO - === Processing Prompt 1/2 ===
+2026-02-28 11:09:49,053 - INFO - Prompt: A legendary comic book hero with an energy sword, standing on a futuristic skyscraper, neon rain, vibrant colors, cyberpunk.
+2026-02-28 11:09:49,053 - INFO - Navigating to tool page for prompt #1...
+2026-02-28 11:09:58,536 - INFO - Filled prompt: A legendary comic book hero with an energy sword, standing o...
+2026-02-28 11:10:01,337 - INFO - Selected 16:9 aspect ratio.
+2026-02-28 11:10:03,306 - INFO - Clicked Generate button. Waiting for image... (usually ~30 sec, max 10 min)
+2026-02-28 11:16:02,431 - ERROR - Error on prompt #1: Page.wait_for_selector: Target page, context or browser has been closed
+Call log:
+  - waiting for locator(".modal-content img") to be visible
+    708 × locator resolved to hidden <img id="img_preview_img"/>
+
+2026-02-28 11:16:02,479 - CRITICAL - Critical error: Page.screenshot: Target page, context or browser has been closed
+2026-02-28 11:16:02,481 - INFO - Closing browser...
+2026-02-28 11:16:02,691 - INFO - Done! Check the 'taaft_comic_output' folder for your images.
+2026-02-28 11:17:50,285 - INFO - Starting TAAFT Comic Automation...
+2026-02-28 11:17:51,006 - INFO - Loaded 1 cookies from taaft_cookies.json
+2026-02-28 11:17:51,007 - INFO - Cookies loaded. Checking if session is still valid...
+2026-02-28 11:18:01,493 - INFO - Session is valid! Already logged in via cookies.
+2026-02-28 11:18:06,930 - INFO - === Processing Prompt 1/2 ===
+2026-02-28 11:18:06,930 - INFO - Prompt: A legendary comic book hero with an energy sword, standing on a futuristic skyscraper, neon rain, vibrant colors, cyberpunk.
+2026-02-28 11:18:06,930 - INFO - Navigating to tool page for prompt #1...
+2026-02-28 11:18:18,786 - INFO - Filled prompt: A legendary comic book hero with an energy sword, standing o...
+2026-02-28 11:18:22,514 - INFO - Selected 16:9 aspect ratio.
+2026-02-28 11:18:24,252 - INFO - Clicked Generate button. Waiting for image... (usually ~30 sec, max 10 min)
+2026-02-28 11:28:24,282 - ERROR - Timeout on prompt #1.
+2026-02-28 11:28:26,929 - INFO - Saved screenshot: taaft_comic_output\timeout_prompt_1_20260228_112824.png
+2026-02-28 11:28:26,929 - INFO - Retry 1/2 for prompt #1
+2026-02-28 11:28:35,917 - INFO - Navigating to tool page for prompt #1...
+2026-02-28 11:28:45,242 - INFO - Filled prompt: A legendary comic book hero with an energy sword, standing o...
+2026-02-28 11:28:48,665 - INFO - Selected 16:9 aspect ratio.
+2026-02-28 11:28:51,898 - INFO - Clicked Generate button. Waiting for image... (usually ~30 sec, max 10 min)
+2026-02-28 11:38:51,920 - ERROR - Timeout on prompt #1.
+2026-02-28 11:38:57,045 - INFO - Saved screenshot: taaft_comic_output\timeout_prompt_1_20260228_113851.png
+2026-02-28 11:38:57,045 - INFO - Retry 2/2 for prompt #1
+2026-02-28 11:39:04,730 - INFO - Navigating to tool page for prompt #1...
+2026-02-28 11:39:14,050 - INFO - Filled prompt: A legendary comic book hero with an energy sword, standing o...
+2026-02-28 11:39:17,470 - INFO - Selected 16:9 aspect ratio.
+2026-02-28 11:39:20,107 - INFO - Clicked Generate button. Waiting for image... (usually ~30 sec, max 10 min)
+2026-02-28 11:40:06,560 | INFO | ==================================================
+2026-02-28 11:40:06,560 | INFO | TAAFT Comic Book Automation — Starting!
+2026-02-28 11:40:06,560 | INFO | Output folder: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-02-28 11:40:06,560 | INFO | Total prompts: 2
+2026-02-28 11:40:06,560 | INFO | ==================================================
+2026-02-28 11:40:07,272 | INFO | Loaded 1 cookies.
+2026-02-28 11:40:14,186 | INFO | Logged in via saved cookies!
+2026-02-28 11:40:17,160 | INFO | 
+2026-02-28 11:40:17,160 | INFO | ==================================================
+2026-02-28 11:40:17,160 | INFO | PROMPT 1/2: A legendary comic book hero with an energy sword, standing on a futuri...
+2026-02-28 11:40:17,160 | INFO | Will save as: 1.png
+2026-02-28 11:40:17,160 | INFO | ==================================================
+2026-02-28 11:40:17,160 | INFO | Navigating to tool page...
+2026-02-28 11:40:23,032 | INFO | Prompt filled: A legendary comic book hero with an energy sword, ...
+2026-02-28 11:40:25,039 | INFO | Aspect ratio: 16:9
+2026-02-28 11:40:25,625 | INFO | Generate clicked! Waiting for image...
+2026-02-28 11:41:26,053 | WARNING | Generation took >60s. Aborting this attempt.
+2026-02-28 11:41:26,053 | INFO | Retry #1... Refreshing page.
+2026-02-28 11:41:31,065 | INFO | Navigating to tool page...
+2026-02-28 11:41:37,033 | INFO | Prompt filled: A legendary comic book hero with an energy sword, ...
+2026-02-28 11:41:38,302 | INFO | Aspect ratio: 16:9
+2026-02-28 11:41:38,891 | INFO | Generate clicked! Waiting for image...
+2026-02-28 11:42:39,350 | WARNING | Generation took >60s. Aborting this attempt.
+2026-02-28 11:42:39,350 | INFO | Retry #2... Refreshing page.
+2026-02-28 11:42:43,105 | INFO | Navigating to tool page...
+2026-02-28 11:42:48,613 | INFO | Prompt filled: A legendary comic book hero with an energy sword, ...
+2026-02-28 11:42:50,319 | INFO | Aspect ratio: 16:9
+2026-02-28 11:42:50,898 | INFO | Generate clicked! Waiting for image...
+2026-02-28 11:43:51,446 | WARNING | Generation took >60s. Aborting this attempt.
+2026-02-28 11:43:51,446 | ERROR | Prompt #1 FAILED after all retries. Skipping.
+2026-02-28 11:43:51,447 | INFO | Waiting 13s before next prompt...
+2026-02-28 11:44:04,025 | INFO | 
+2026-02-28 11:44:04,025 | INFO | ==================================================
+2026-02-28 11:44:04,026 | INFO | PROMPT 2/2: A female protagonist in a classic comic style, fighting a giant dark c...
+2026-02-28 11:44:04,026 | INFO | Will save as: 1.png
+2026-02-28 11:44:04,026 | INFO | ==================================================
+2026-02-28 11:44:04,026 | INFO | Navigating to tool page...
+2026-02-28 11:44:10,490 | ERROR | Error: Locator.count: Target page, context or browser has been closed
+2026-02-28 11:44:10,491 | INFO | Retry #1... Refreshing page.
+2026-02-28 11:44:10,493 | CRITICAL | Fatal error: Page.goto: Target page, context or browser has been closed
+2026-02-28 11:44:10,660 | INFO | Browser closed. Goodbye!
+2026-02-28 11:54:55,693 | INFO | ==================================================
+2026-02-28 11:54:55,693 | INFO | TAAFT Comic Book Automation - Starting!
+2026-02-28 11:54:55,693 | INFO | Output folder: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-02-28 11:54:55,693 | INFO | Total prompts: 2
+2026-02-28 11:54:55,693 | INFO | ==================================================
+2026-02-28 11:54:56,486 | INFO | Loaded 1 cookies.
+2026-02-28 11:55:01,145 | INFO | Logged in via saved cookies!
+2026-02-28 11:55:03,546 | INFO | 
+2026-02-28 11:55:03,547 | INFO | ==================================================
+2026-02-28 11:55:03,547 | INFO | PROMPT 1/2: A legendary comic book hero with an energy sword, standing on a futuri...
+2026-02-28 11:55:03,547 | INFO | Saving as: 1.png
+2026-02-28 11:55:03,547 | INFO | ==================================================
+2026-02-28 11:55:03,547 | INFO | Navigating to tool page...
+2026-02-28 11:55:09,456 | INFO | Prompt filled: A legendary comic book hero with an energy sword, ...
+2026-02-28 11:55:10,775 | INFO | Aspect ratio: 16:9
+2026-02-28 11:55:11,540 | INFO | Images on page before generate: 0
+2026-02-28 11:55:11,583 | INFO | Generate clicked! Polling for result...
+2026-02-28 11:55:25,825 | INFO | 'Download' link appeared after 14s. Image is ready!
+2026-02-28 11:55:27,986 | INFO | Found image via page scan
+2026-02-28 11:55:27,986 | INFO | Image URL: https://media.theresanaiforthat.com/assets/linkedin.svg?width=40...
+2026-02-28 11:55:29,724 | INFO | SAVED via new tab: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:55:29,738 | ERROR | File missing or too small: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:55:29,738 | INFO | Retry #1... Refreshing.
+2026-02-28 11:55:33,164 | INFO | Navigating to tool page...
+2026-02-28 11:55:38,800 | INFO | Prompt filled: A legendary comic book hero with an energy sword, ...
+2026-02-28 11:55:40,761 | INFO | Aspect ratio: 16:9
+2026-02-28 11:55:41,633 | INFO | Images on page before generate: 0
+2026-02-28 11:55:41,677 | INFO | Generate clicked! Polling for result...
+2026-02-28 11:56:02,020 | INFO | 'Download' link appeared after 20s. Image is ready!
+2026-02-28 11:56:04,807 | INFO | Found image via page scan
+2026-02-28 11:56:04,807 | INFO | Image URL: https://media.theresanaiforthat.com/assets/linkedin.svg?width=40...
+2026-02-28 11:56:06,701 | INFO | SAVED via new tab: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:56:06,717 | ERROR | File missing or too small: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:56:06,717 | INFO | Retry #2... Refreshing.
+2026-02-28 11:56:10,893 | INFO | Navigating to tool page...
+2026-02-28 11:56:16,849 | INFO | Prompt filled: A legendary comic book hero with an energy sword, ...
+2026-02-28 11:56:18,552 | INFO | Aspect ratio: 16:9
+2026-02-28 11:56:19,107 | INFO | Images on page before generate: 0
+2026-02-28 11:56:19,148 | INFO | Generate clicked! Polling for result...
+2026-02-28 11:56:33,400 | INFO | 'Download' link appeared after 14s. Image is ready!
+2026-02-28 11:56:36,374 | INFO | Found image via page scan
+2026-02-28 11:56:36,374 | INFO | Image URL: https://media.theresanaiforthat.com/assets/linkedin.svg?width=40...
+2026-02-28 11:56:37,444 | INFO | SAVED via new tab: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:56:37,458 | ERROR | File missing or too small: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:56:37,458 | ERROR | Prompt #1 FAILED after all retries. Skipping.
+2026-02-28 11:56:37,458 | INFO | Waiting 12s before next...
+2026-02-28 11:56:49,932 | INFO | 
+2026-02-28 11:56:49,932 | INFO | ==================================================
+2026-02-28 11:56:49,933 | INFO | PROMPT 2/2: A female protagonist in a classic comic style, fighting a giant dark c...
+2026-02-28 11:56:49,933 | INFO | Saving as: 1.png
+2026-02-28 11:56:49,933 | INFO | ==================================================
+2026-02-28 11:56:49,933 | INFO | Navigating to tool page...
+2026-02-28 11:56:55,291 | INFO | Prompt filled: A female protagonist in a classic comic style, fig...
+2026-02-28 11:56:56,496 | INFO | Aspect ratio: 16:9
+2026-02-28 11:56:57,193 | INFO | Images on page before generate: 0
+2026-02-28 11:56:57,229 | INFO | Generate clicked! Polling for result...
+2026-02-28 11:57:13,514 | INFO | 'Download' link appeared after 16s. Image is ready!
+2026-02-28 11:57:16,359 | INFO | Found image via page scan
+2026-02-28 11:57:16,359 | INFO | Image URL: https://media.theresanaiforthat.com/assets/linkedin.svg?width=40...
+2026-02-28 11:57:18,410 | INFO | SAVED via new tab: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:57:18,424 | ERROR | File missing or too small: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output\1.png
+2026-02-28 11:57:18,424 | INFO | Retry #1... Refreshing.
+2026-02-28 11:57:21,877 | INFO | Navigating to tool page...
+2026-02-28 11:57:27,278 | ERROR | Error: Page.fill: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("textarea#user_input")
+
+2026-02-28 11:57:27,321 | CRITICAL | Fatal error: Page.screenshot: Target page, context or browser has been closed
+2026-02-28 11:57:27,458 | INFO | Browser closed. Done!
+2026-02-28 12:14:04,583 | INFO | ==================================================
+2026-02-28 12:14:04,583 | INFO | TAAFT Comic Automation - Starting!
+2026-02-28 12:14:04,583 | INFO | Output: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-02-28 12:14:04,583 | INFO | Prompts: 2
+2026-02-28 12:14:04,583 | INFO | ==================================================
+2026-02-28 12:14:08,170 | INFO | Logged in via saved cookies!
+2026-02-28 12:14:10,627 | INFO | 
+==================================================
+2026-02-28 12:14:10,627 | INFO | PROMPT 1/2 -> 2.png
+2026-02-28 12:14:10,627 | INFO | ==================================================
+2026-02-28 12:14:10,627 | INFO | Navigating to tool...
+2026-02-28 12:14:16,956 | INFO | Prompt: A legendary comic book hero with an energy sword, ...
+2026-02-28 12:14:18,854 | INFO | Aspect ratio: 16:9
+2026-02-28 12:14:19,805 | INFO | Generate clicked! Waiting...
+2026-02-28 12:14:33,975 | INFO | Image ready in 14s!
+2026-02-28 12:14:33,975 | INFO | Waiting 5s for image to fully load...
+2026-02-28 12:14:40,934 | INFO | Found image! Area: 1184768px, URL: https://media.theresanaiforthat.com/assets/requests.png?width=1024...
+2026-02-28 12:14:40,967 | INFO | Opening image in new tab...
+2026-02-28 12:14:50,139 | INFO | Downloaded 407170 bytes
+2026-02-28 12:14:50,146 | INFO | SUCCESS! 2.png saved (398 KB)
+2026-02-28 12:14:50,146 | INFO | Wait 13s...
+2026-02-28 12:15:03,234 | INFO | 
+==================================================
+2026-02-28 12:15:03,234 | INFO | PROMPT 2/2 -> 3.png
+2026-02-28 12:15:03,234 | INFO | ==================================================
+2026-02-28 12:15:03,234 | INFO | Navigating to tool...
+2026-02-28 12:15:08,948 | INFO | Prompt: A female protagonist in a classic comic style, fig...
+2026-02-28 12:15:10,915 | INFO | Aspect ratio: 16:9
+2026-02-28 12:15:11,654 | INFO | Generate clicked! Waiting...
+2026-02-28 12:15:25,819 | INFO | Image ready in 14s!
+2026-02-28 12:15:25,819 | INFO | Waiting 5s for image to fully load...
+2026-02-28 12:15:32,270 | INFO | Found image! Area: 1184768px, URL: https://media.theresanaiforthat.com/assets/requests.png?width=1024...
+2026-02-28 12:15:32,310 | INFO | Opening image in new tab...
+2026-02-28 12:15:39,204 | INFO | Downloaded 407170 bytes
+2026-02-28 12:15:39,216 | INFO | SUCCESS! 3.png saved (398 KB)
+2026-02-28 12:15:39,219 | INFO | 
+==================================================
+2026-02-28 12:15:39,219 | INFO | DONE! Success: 2/2, Failed: 0/2
+2026-02-28 12:15:39,220 | INFO | Folder: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-02-28 12:15:39,220 | INFO | ==================================================
+2026-02-28 12:30:30,024 | INFO | ==================================================
+2026-02-28 12:30:30,024 | INFO | TAAFT Comic Automation - Starting!
+2026-02-28 12:30:30,024 | INFO | Output: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-02-28 12:30:30,024 | INFO | Prompts: 2
+2026-02-28 12:30:30,024 | INFO | ==================================================
+2026-02-28 12:30:33,832 | INFO | Logged in via saved cookies!
+2026-02-28 12:30:35,859 | INFO | 
+==================================================
+2026-02-28 12:30:35,859 | INFO | PROMPT 1/2 -> 4.png
+2026-02-28 12:30:35,859 | INFO | ==================================================
+2026-02-28 12:30:35,859 | INFO | Navigating to tool...
+2026-02-28 12:30:42,980 | INFO | Prompt: A legendary comic book hero with an energy sword, ...
+2026-02-28 12:30:44,986 | INFO | Aspect ratio: 16:9
+2026-02-28 12:30:45,536 | INFO | Generate clicked! Waiting...
+2026-02-28 12:30:59,706 | INFO | Image ready in 14s!
+2026-02-28 12:30:59,706 | INFO | Waiting 5s for image to fully load...
+2026-02-28 12:31:06,166 | INFO | Found image! Area: 434501.25px, URL: https://media.theresanaiforthat.com/g/epic-comic-book-portrait-in-striking-detail@783122-c20b1e15-21...
+2026-02-28 12:31:06,199 | INFO | Opening image in new tab...
+2026-02-28 12:31:22,970 | INFO | Downloaded 1983165 bytes
+2026-02-28 12:31:22,980 | INFO | SUCCESS! 4.png saved (1937 KB)
+2026-02-28 12:31:22,980 | INFO | Wait 14s...
+2026-02-28 12:31:37,165 | INFO | 
+==================================================
+2026-02-28 12:31:37,165 | INFO | PROMPT 2/2 -> 5.png
+2026-02-28 12:31:37,166 | INFO | ==================================================
+2026-02-28 12:31:37,166 | INFO | Navigating to tool...
+2026-02-28 12:31:44,223 | INFO | Prompt: A female protagonist in a classic comic style, fig...
+2026-02-28 12:31:45,654 | INFO | Aspect ratio: 16:9
+2026-02-28 12:31:46,328 | INFO | Generate clicked! Waiting...
+2026-02-28 12:32:06,568 | INFO | Image ready in 20s!
+2026-02-28 12:32:06,568 | INFO | Waiting 5s for image to fully load...
+2026-02-28 12:32:13,032 | INFO | Found image! Area: 434501.25px, URL: https://media.theresanaiforthat.com/g/epic-comic-book-portrait-in-striking-detail@783122-121bb6e0-61...
+2026-02-28 12:32:13,068 | INFO | Opening image in new tab...
+2026-02-28 12:32:23,338 | INFO | Downloaded 1977639 bytes
+2026-02-28 12:32:23,348 | INFO | SUCCESS! 5.png saved (1931 KB)
+2026-02-28 12:32:23,354 | INFO | 
+==================================================
+2026-02-28 12:32:23,354 | INFO | DONE! Success: 2/2, Failed: 0/2
+2026-02-28 12:32:23,355 | INFO | Folder: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-02-28 12:32:23,355 | INFO | ==================================================
+2026-03-01 15:17:59,884 | INFO | ==================================================
+2026-03-01 15:17:59,884 | INFO | TAAFT Comic Automation - Starting!
+2026-03-01 15:17:59,885 | INFO | Prompts: 2
+2026-03-01 15:17:59,885 | INFO | ==================================================
+2026-03-01 15:18:05,711 | INFO | 
+==================================================
+2026-03-01 15:18:05,712 | INFO | ACCOUNT: Default
+2026-03-01 15:18:05,712 | INFO | Cookies: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_cookies.json
+2026-03-01 15:18:05,713 | INFO | Proxy: None (direct)
+2026-03-01 15:18:05,713 | INFO | Output: c:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output
+2026-03-01 15:18:05,713 | INFO | ==================================================
+2026-03-01 15:18:05,713 | INFO | No proxy configured — using direct connection
+2026-03-01 15:18:05,863 | INFO | Loaded 2 cookies
+2026-03-01 15:18:10,924 | INFO | [Default] Logged in successfully!
+2026-03-01 15:18:10,924 | INFO | 
+[Default] PROMPT 1/2 -> 6.png
+2026-03-01 15:18:10,925 | INFO | Navigating to tool...
+2026-03-01 15:18:16,223 | INFO | Prompt: A legendary comic book hero with an energy sword, ...
+2026-03-01 15:18:17,512 | INFO | Aspect ratio: 16:9
+2026-03-01 15:18:18,233 | INFO | Generate clicked! Waiting...
+2026-03-01 15:18:40,497 | INFO | Image ready in 22s!
+2026-03-01 15:18:40,497 | INFO | Waiting 5s for image to fully load...
+2026-03-01 15:18:46,612 | INFO | Found image! Area: 434501.25px, URL: https://media.theresanaiforthat.com/g/epic-comic-book-portrait-in-striking-detail@783122-6d569e4b-2b...
+2026-03-01 15:18:46,657 | INFO | Opening image in new tab...
+2026-03-01 15:18:52,754 | INFO | Downloaded 1923963 bytes
+2026-03-01 15:18:52,770 | INFO | SUCCESS! 6.png saved (1879 KB)
+2026-03-01 15:18:52,771 | INFO | Wait 14s...
+2026-03-01 15:19:07,235 | INFO | 
+[Default] PROMPT 2/2 -> 7.png
+2026-03-01 15:19:07,235 | INFO | Navigating to tool...
+2026-03-01 15:19:13,046 | INFO | Prompt: A female protagonist in a classic comic style, fig...
+2026-03-01 15:19:14,335 | INFO | Aspect ratio: 16:9
+2026-03-01 15:19:15,113 | INFO | Generate clicked! Waiting...
+2026-03-01 15:19:35,318 | INFO | Image ready in 20s!
+2026-03-01 15:19:35,319 | INFO | Waiting 5s for image to fully load...
+2026-03-01 15:19:42,275 | INFO | Found image! Area: 434501.25px, URL: https://media.theresanaiforthat.com/g/epic-comic-book-portrait-in-striking-detail@783122-d34dc65d-64...
+2026-03-01 15:19:42,313 | INFO | Opening image in new tab...
+2026-03-01 15:19:47,268 | INFO | Downloaded 1892521 bytes
+2026-03-01 15:19:47,281 | INFO | SUCCESS! 7.png saved (1848 KB)
+2026-03-01 15:19:47,285 | INFO | [Default] DONE! Success: 2/2, Failed: 0/2
+2026-03-01 16:33:06,289 | INFO | ==================================================
+2026-03-01 16:33:06,289 | INFO | TAAFT Comic Automation — Proxy Edition
+2026-03-01 16:33:06,293 | INFO | Prompts: 2
+2026-03-01 16:33:06,293 | INFO | ==================================================
+2026-03-01 16:33:06,293 | INFO | No proxies configured — using direct connection
+2026-03-01 16:33:06,956 | INFO | 
+Chapter-Account Mapping:
+2026-03-01 16:33:06,956 | INFO |   Chapter 1 -> Proxy: None | Cookie: taaft_cookies.json
+2026-03-01 16:33:06,956 | INFO | 
+==================================================
+2026-03-01 16:33:06,956 | INFO | ACCOUNT: Chapter 1
+2026-03-01 16:33:06,959 | INFO | Cookies: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_cookies.json
+2026-03-01 16:33:06,959 | INFO | Proxy: Direct
+2026-03-01 16:33:06,959 | INFO | Output: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output_ch1
+2026-03-01 16:33:06,959 | INFO | ==================================================
+2026-03-01 16:33:07,062 | INFO | Loaded 2 cookies
+2026-03-01 16:33:11,559 | INFO | [Chapter 1] Connected OK via direct
+2026-03-01 16:33:11,559 | INFO | 
+[Chapter 1] PROMPT 1/2 -> 1.png
+2026-03-01 16:33:11,559 | INFO | Navigating to tool...
+2026-03-01 16:33:19,618 | INFO | Prompt: A legendary comic book hero with an energy sword, ...
+2026-03-01 16:33:21,345 | INFO | Aspect ratio: 16:9
+2026-03-01 16:33:21,903 | INFO | Generate clicked! Waiting...
+2026-03-01 16:33:40,113 | INFO | Image ready in 18s!
+2026-03-01 16:33:40,113 | INFO | Waiting 5s for image to fully load...
+2026-03-01 16:33:46,891 | INFO | Found image! Area: 434501.25px, URL: https://media.theresanaiforthat.com/g/epic-comic-book-portrait-in-striking-detail@783122-2c64a4f4-b5...
+2026-03-01 16:33:46,924 | INFO | Opening image in new tab...
+2026-03-01 16:33:52,519 | INFO | Downloaded 1733299 bytes
+2026-03-01 16:33:52,519 | INFO | SUCCESS! 1.png saved (1693 KB)
+2026-03-01 16:33:52,535 | INFO | Wait 14s...
+2026-03-02 12:20:01,860 | INFO | ==================================================
+2026-03-02 12:20:01,862 | INFO | TAAFT Comic Automation — Proxy Edition
+2026-03-02 12:20:01,865 | INFO | Prompts: 2
+2026-03-02 12:20:01,865 | INFO | ==================================================
+2026-03-02 12:20:01,866 | INFO | No proxies configured — using direct connection
+2026-03-02 12:20:02,588 | INFO | 
+Chapter-Account Mapping:
+2026-03-02 12:20:02,588 | INFO |   Chapter 1 -> Proxy: None | Cookie: taaft_cookies.json
+2026-03-02 12:20:02,589 | INFO | 
+==================================================
+2026-03-02 12:20:02,589 | INFO | ACCOUNT: Chapter 1
+2026-03-02 12:20:02,590 | INFO | Cookies: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_cookies.json
+2026-03-02 12:20:02,590 | INFO | Proxy: Direct
+2026-03-02 12:20:02,590 | INFO | Output: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output_ch1
+2026-03-02 12:20:02,590 | INFO | ==================================================
+2026-03-02 12:20:02,699 | INFO | Loaded 2 cookies
+2026-03-02 12:20:07,571 | INFO | [Chapter 1] Connected OK via direct
+2026-03-02 12:20:07,571 | INFO | 
+[Chapter 1] PROMPT 1/2 -> 2.png
+2026-03-02 12:20:07,571 | INFO | Navigating to tool...
+2026-03-02 12:20:12,844 | INFO | Prompt: A legendary comic book hero with an energy sword, ...
+2026-03-02 12:20:14,362 | INFO | Aspect ratio: 16:9
+2026-03-02 12:20:15,165 | INFO | Generate clicked! Waiting...
+2026-03-02 12:20:41,443 | INFO | Image ready in 26s!
+2026-03-02 12:20:41,443 | INFO | Waiting 5s for image to fully load...
+2026-03-02 12:20:48,371 | INFO | Found image! Area: 230490px, URL: https://theresanaiforthat.com/assets/loading2_292932.webp...
+2026-03-02 12:20:48,400 | INFO | Opening image in new tab...
+2026-03-02 12:20:51,394 | INFO | Downloaded 280190 bytes
+2026-03-02 12:20:51,409 | INFO | SUCCESS! 2.png saved (274 KB)
+2026-03-02 12:20:51,410 | INFO | Wait 14s...
+2026-03-02 12:21:05,580 | INFO | 
+[Chapter 1] PROMPT 2/2 -> 3.png
+2026-03-02 12:21:05,580 | INFO | Navigating to tool...
+2026-03-02 12:21:09,927 | ERROR | Error: Locator.count: Target page, context or browser has been closed
+2026-03-02 12:21:09,928 | INFO | Retry #1...
+2026-03-02 12:21:13,993 | INFO | Navigating to tool...
+2026-03-02 12:21:13,994 | ERROR | [Chapter 1] Error: Page.goto: Target page, context or browser has been closed
+2026-03-02 12:21:14,000 | INFO | 
+ALL DONE! Total: 0 ok, 0 failed
+2026-03-02 12:23:48,253 | INFO | ==================================================
+2026-03-02 12:23:48,253 | INFO | TAAFT Comic Automation — Proxy Edition
+2026-03-02 12:23:48,253 | INFO | Prompts: 2
+2026-03-02 12:23:48,253 | INFO | ==================================================
+2026-03-02 12:23:48,255 | INFO | No proxies configured — using direct connection
+2026-03-02 12:23:48,908 | INFO | 
+Chapter-Account Mapping:
+2026-03-02 12:23:48,924 | INFO |   Chapter 1 -> Proxy: None | Cookie: taaft_cookies.json
+2026-03-02 12:23:48,925 | INFO | 
+==================================================
+2026-03-02 12:23:48,925 | INFO | ACCOUNT: Chapter 1
+2026-03-02 12:23:48,925 | INFO | Cookies: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_cookies.json
+2026-03-02 12:23:48,925 | INFO | Proxy: Direct
+2026-03-02 12:23:48,925 | INFO | Output: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output_ch1
+2026-03-02 12:23:48,925 | INFO | ==================================================
+2026-03-02 12:23:49,071 | INFO | Loaded 2 cookies
+2026-03-02 12:23:52,831 | INFO | [Chapter 1] Connected OK via direct
+2026-03-02 12:23:52,831 | INFO | 
+[Chapter 1] PROMPT 1/2 -> 3.png
+2026-03-02 12:23:52,831 | INFO | Navigating to tool...
+2026-03-02 12:23:52,834 | ERROR | [Chapter 1] Error: Page.goto: Target page, context or browser has been closed
+2026-03-02 12:23:52,841 | INFO | 
+ALL DONE! Total: 0 ok, 0 failed
+2026-03-02 13:11:47,256 | INFO | ==================================================
+2026-03-02 13:11:47,256 | INFO | TAAFT Comic Automation — Proxy Edition
+2026-03-02 13:11:47,257 | INFO | Prompts: 2
+2026-03-02 13:11:47,257 | INFO | ==================================================
+2026-03-02 13:11:47,257 | INFO | No proxies configured — using direct connection
+2026-03-02 13:11:47,926 | INFO | 
+Chapter-Account Mapping:
+2026-03-02 13:11:47,928 | INFO |   Chapter 1 -> Proxy: None | Cookie: taaft_cookies.json
+2026-03-02 13:11:47,932 | INFO | 
+==================================================
+2026-03-02 13:11:47,933 | INFO | ACCOUNT: Chapter 1
+2026-03-02 13:11:47,933 | INFO | Cookies: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_cookies.json
+2026-03-02 13:11:47,933 | INFO | Proxy: Direct
+2026-03-02 13:11:47,933 | INFO | Output: C:\Users\kunal\OneDrive\Desktop\TRAAFT TEST\taaft_comic_output_ch1
+2026-03-02 13:11:47,933 | INFO | ==================================================
+2026-03-02 13:11:48,078 | INFO | Loaded 2 cookies
+2026-03-02 13:11:55,354 | INFO | [Chapter 1] Connected OK via direct
+2026-03-02 13:11:55,354 | INFO | 
+[Chapter 1] PROMPT 1/2 -> 3.png
+2026-03-02 13:11:55,355 | INFO | Navigating to tool...
+2026-03-02 13:12:00,739 | INFO | Prompt: A legendary comic book hero with an energy sword, ...
+2026-03-02 13:12:01,892 | INFO | Aspect ratio: 16:9
+2026-03-02 13:12:02,617 | INFO | Generate clicked! Waiting...
+2026-03-02 13:12:28,923 | INFO | Image ready in 26s!
+2026-03-02 13:12:28,923 | INFO | Waiting 5s for image to fully load...
+2026-03-02 13:12:35,397 | INFO | Clicking the Download button...
+2026-03-02 13:12:39,873 | INFO | SUCCESS! 3.png saved (1828 KB)
+2026-03-02 13:12:39,874 | INFO | Wait 13s...
+2026-03-02 13:12:52,425 | INFO | 
+[Chapter 1] PROMPT 2/2 -> 4.png
+2026-03-02 13:12:52,425 | INFO | Navigating to tool...
+2026-03-02 13:12:52,427 | ERROR | [Chapter 1] Error: Page.goto: Target page, context or browser has been closed
+2026-03-02 13:12:52,427 | INFO | 
+ALL DONE! Total: 0 ok, 0 failed
