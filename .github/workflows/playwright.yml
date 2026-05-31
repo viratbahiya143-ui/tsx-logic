@@ -9,7 +9,7 @@ on:
 
 jobs:
   generate-videos:
-    timeout-minutes: 120
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,8 +24,21 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Install Playwright Chromium
-      run: npx playwright install --with-deps chromium
+    - name: Cache Playwright Browsers
+      id: pw-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: pw-chromium-${{ runner.os }}-${{ hashFiles('tsx logic/package.json') }}
+
+    - name: Install Playwright Chromium (browser only)
+      if: steps.pw-cache.outputs.cache-hit != 'true'
+      run: npx playwright install chromium
+      timeout-minutes: 5
+
+    - name: Install system dependencies for Chromium
+      run: sudo npx playwright install-deps chromium
+      timeout-minutes: 3
 
     - name: Run TSX to Video Automation
       run: xvfb-run --server-args="-screen 0 1920x1080x24 -ac" --auto-servernum -- node automation/recorder.js
