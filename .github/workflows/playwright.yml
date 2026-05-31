@@ -9,23 +9,18 @@ on:
 
 jobs:
   generate-videos:
-    timeout-minutes: 120
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.0-noble
     defaults:
       run:
         working-directory: ./tsx logic
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-
     - name: Install dependencies
       run: npm install
-
-    - name: Install Playwright Chromium
-      run: npx playwright install --with-deps chromium
 
     - name: Run TSX to Video Automation
       run: xvfb-run --server-args="-screen 0 1920x1080x24 -ac" --auto-servernum -- node automation/recorder.js
