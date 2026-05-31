@@ -21,6 +21,11 @@ jobs:
         cd "tsx logic"
         npm install
 
+    - name: Install Playwright Chromium (browser only)
+      run: |
+        cd "tsx logic"
+        npx playwright install chromium
+
     - name: Run TSX to Video Automation
       run: |
         cd "tsx logic"
