@@ -13,17 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.50.0-noble
-    defaults:
-      run:
-        working-directory: ./tsx logic
     steps:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: npm install
+      run: |
+        cd "tsx logic"
+        npm install
 
     - name: Run TSX to Video Automation
-      run: xvfb-run --server-args="-screen 0 1920x1080x24 -ac" --auto-servernum -- node automation/recorder.js
+      run: |
+        cd "tsx logic"
+        xvfb-run --server-args="-screen 0 1920x1080x24 -ac" --auto-servernum -- node automation/recorder.js
 
     - name: Upload Generated Videos
       if: always()
