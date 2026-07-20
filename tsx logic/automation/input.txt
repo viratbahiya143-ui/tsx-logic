@@ -278,22 +278,143 @@ export default Scene02HiddenPlate;
 
 ```tsx
 import React from 'react';
-Cookies persist until cleared
-Account 1
-✓ done
-Drag cookies.json here
-Account 2
-idle
-Drag cookies.json here
-Account 3
-⟳ working...
-Cookies loaded
-×
-Account 4
-idle
-Drag cookies.json here
-Account 5
-idle
+
+import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+
+export const compositionConfig = {
+  id: 'Scene03GroceryVsBill',
+  durationInSeconds: 30,
+  fps: 30,
+  width: 1920,
+  height: 1080,
+};
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const Scene03GroceryVsBill: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  const sp = (delay: number, config?: object) =>
+    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+
+  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+  });
+
+  // Rolling counter: 30L -> 50L
+  const lakh = Math.floor(interpolate(frame, [280, 480], [0, 50], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) }));
+
+  // Bars: grocery small vs hospital huge
+  const groceryBar = interpolate(frame, [80, 160], [0, 90], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const hospitalBar = interpolate(frame, [300, 500], [0, 560], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.exp) });
+
+  // Screen shake on impact (frame 500-520)
+  const shake = frame > 500 && frame < 522 ? Math.sin(frame * 4) * 9 * ((522 - frame) / 22) : 0;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#8CA9FF', overflow: 'hidden' }}>
+      <AbsoluteFill style={{ opacity: exitOp, transform: `translate(${shake}px, ${-shake / 2}px)` }}>
+        {/* Gradient */}
+        <AbsoluteFill style={{ background: 'linear-gradient(180deg, #A2BBFF 0%, #8CA9FF 45%, #6B89E6 100%)' }} />
+
+        {/* Shape Layers */}
+        <div style={{
+          position: 'absolute', width: 620, height: 620, border: '2px solid rgba(0,0,0,0.08)',
+          borderRadius: 40, left: -180, bottom: -200, transform: `rotate(${frame * 0.05}deg)`,
+        }} />
+        <div style={{
+          position: 'absolute', width: 380, height: 380, borderRadius: '50%',
+          background: 'rgba(238,238,238,0.08)', right: -90, top: -110,
+          transform: `scale(${1 + Math.sin(frame * 0.03) * 0.04})`,
+        }} />
+
+        {/* Texture: vertical rhythm lines */}
+        {[...Array(9)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: 0, bottom: 0, left: 200 * (i + 1),
+            width: 1, background: 'rgba(238,238,238,0.10)',
+          }} />
+        ))}
+
+        {/* Particles */}
+        {[...Array(10)].map((_, i) => {
+          const py = (seededRandom(i * 6) * 1080 + frame * 0.5) % 1080;
+          return (
+            <div key={i} style={{
+              position: 'absolute', left: seededRandom(i * 3) * 1920, top: py,
+              width: 6, height: 6, background: 'rgba(0,0,0,0.15)', transform: 'rotate(45deg)',
+            }} />
+          );
+        })}
+
+        {/* Headline */}
+        <div style={{
+          position: 'absolute', top: 90, left: 0, right: 0, textAlign: 'center',
+          fontFamily: "'Noto Sans Devanagari', sans-serif", fontSize: 60, fontWeight: 800, color: '#000000',
+          opacity: sp(10), transform: `translateY(${(1 - sp(10)) * -40}px)`,
+        }}>
+          हर महीने का खर्च बनाम एक बीमारी का बिल
+        </div>
+
+        {/* Graph: two bars comparison */}
+        <div style={{ position: 'absolute', left: 300, bottom: 200, display: 'flex', gap: 260, alignItems: 'flex-end' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              width: 220, height: groceryBar, background: '#EEEEEE', borderRadius: '14px 14px 0 0',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+            }} />
+            <div style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", fontSize: 44, fontWeight: 700, color: '#000000', marginTop: 18, opacity: sp(160) }}>
+              किराना<br />₹10-15 हज़ार / माह
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              width: 220, height: hospitalBar, background: '#000000', borderRadius: '14px 14px 0 0',
+              boxShadow: '0 12px 46px rgba(0,0,0,0.3)',
+            }} />
+            <div style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", fontSize: 44, fontWeight: 700, color: '#000000', marginTop: 18, opacity: sp(340) }}>
+              हॉस्पिटल बिल
+            </div>
+          </div>
+        </div>
+
+        {/* Rolling counter payoff */}
+        <div style={{
+          position: 'absolute', right: 170, top: 380, textAlign: 'right',
+          opacity: sp(300), transform: `scale(${0.85 + sp(300) * 0.15})`,
+        }}>
+          <div style={{
+            fontFamily: "'Yantra One', 'Inter', sans-serif", fontSize: 200, fontWeight: 800,
+            color: '#EEEEEE', textShadow: '0 10px 40px rgba(0,0,0,0.35)', lineHeight: 1,
+          }}>
+            ₹{lakh}
+          </div>
+          <div style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", fontSize: 84, fontWeight: 800, color: '#000000' }}>
+            लाख तक
+          </div>
+        </div>
+
+        {/* Vignette */}
+        <AbsoluteFill style={{ background: 'radial-gradient(circle, transparent 55%, rgba(0,0,0,0.28) 100%)', pointerEvents: 'none' }} />
+
+        {/* Watermark */}
+        <div style={{
+          position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter, sans-serif',
+          fontSize: 22, fontWeight: 600, color: '#000000',
+          opacity: interpolate(frame, [0, 60], [0.6, 0.3], { extrapolateRight: 'clamp' }),
+        }}>
+          ProBuffet HQ
+        </div>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+
+export default Scene03GroceryVsBill;
 ```
 
 ```tsx
